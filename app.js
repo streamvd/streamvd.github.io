@@ -1,5 +1,5 @@
 // Ligação direta para a API global, ignorando totalmente o Render
-const DIRECT_API_URL = 'https://yewtu.be/api/v1/videos/';
+const DIRECT_API_URL = 'https://alltube.herokuapp.com/json?url=https://www.youtube.com/watch?v=';
 
 const form = document.getElementById('extractor-form');
 const urlInput = document.getElementById('youtube-url');
@@ -47,14 +47,17 @@ async function executarExtracaoDireta(id) {
     }
     const data = await response.json();
     
+    // Mapeia os formatos retornados pela API do AllTube
+    const videoFormats = data.streams.map(stream => ({
+        quality: stream.format || 'MP4',
+        url: stream.url
+    }));
+
     return {
-        title: data.title,
+        title: data.title || "Vídeo do YouTube",
         thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-        duration: new Date(data.lengthSeconds * 1000).toISOString().substr(11, 8),
-        formats: data.formatStreams.map(f => ({
-            quality: f.qualityLabel || f.quality || '360p',
-            url: f.url
-        }))
+        duration: "Pronto",
+        formats: videoFormats
     };
 }
 
