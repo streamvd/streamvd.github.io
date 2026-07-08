@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StreamFetch - Media Extractor</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0F0F0F">
+</head>
+<body>
+    <main class="app-container">
+        <header class="app-header">
+            <h1 class="brand-title">Stream<span>Fetch</span></h1>
+            <p class="brand-subtitle">Insira o link do YouTube para extrair as mídias disponíveis</p>
+        </header>
+
+        <section class="input-section">
+            <form id="extractor-form" novalidate>
+                <div class="input-group">
+                    <input 
+                        type="url" 
+                        id="youtube-url" 
+                        placeholder="https://youtu.be/..." 
+                        required
+                        aria-label="Link do vídeo do YouTube"
+                    >
+                    <button type="submit" id="btn-submit" aria-label="Analisar link">
+                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+                <span class="error-message" id="input-error" aria-live="polite"></span>
+            </form>
+        </section>
+
+        <section class="loader-section hidden" id="loader">
+            <div class="spinner"></div>
+            <p>Processando manifestos de vídeo...</p>
+        </section>
+
+        <section class="result-section hidden" id="result-container">
+            <div class="video-preview-card">
+                <div class="thumbnail-wrapper">
+                    <img id="video-thumb" src="" alt="Thumbnail do vídeo">
+                    <span id="video-duration" class="badge">00:00</span>
+                </div>
+                <h2 id="video-title" class="video-title">Título do Vídeo</h2>
+            </div>
+
+            <div class="download-options">
+                <h3 class="section-title">Resoluções Disponíveis</h3>
+                <div class="options-grid" id="resolutions-grid">
+                    </div>
+            </div>
+        </section>
+    </main>
+    <script src="app.js"></script>
+</body>
+</html>
