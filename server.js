@@ -18,49 +18,48 @@ app.get('/api/extract', async (req, res) => {
     }
 
     try {
-        const videoUrl = `https://www.youtube.com/watch?v=${id}`;
+        // Consome uma das instâncias globais mais estáveis do Invidious
+        const response = await fetch(`https://iv.melmac.space/api/v1/videos/${id}`);
         
-        // Requisição para uma instância pública e estável do Cobalt com parâmetros de download forçado
-        const cobaltResponse = await fetch('https://cobalt.api.unblock.casa/api/json', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                url: videoUrl,
-                vQuality: 'max',       // Busca a qualidade máxima disponível (incluindo 1080p)
-                isAudioMuted: false,   // Garante áudio embutido no arquivo
-                filenamePattern: 'classic' // Nome amigável para o arquivo baixado
-            })
-        });
-
-        const cobaltData = await cobaltResponse.json();
-
-        if (cobaltData.status === 'error' || !cobaltData.url) {
-            throw new Error(cobaltData.text || 'Erro na resposta da API externa.');
+        if (!response.ok) {
+            throw new Error('Instância temporariamente ocupada.');
         }
 
-        // Retorna as opções estruturadas para o seu PWA renderizar
-        // Nota: A API do Cobalt processa a melhor combinação de vídeo + áudio disponível automaticamente
+        const videoData = await response.json();
+
+        // Filtra e mapeia as resoluções disponíveis garantindo o parâmetro de download forçado
+        const formats = videoData.formatStreams
+            .map(f => {
+                const qualityLabel = f.qualityLabel || f.quality || '360p';
+                // O truque está aqui: concatenar &download=true força o navegador a baixar em vez de reproduzir
+                const downloadUrl = f.url.includes('?') ? `${f.url}&download=true` : `${f.url}?download=true`;
+                
+                return {
+                    quality: qualityLabel.includes('p') ? qualityLabel : `${qualityLabel}p`,
+                    url: downloadUrl
+                };
+            });
+
+        if (formats.length === 0) {
+            throw new Error('Nenhum formato de download direto disponível.');
+        }
+
         return res.json({
-            title: cobaltData.filename || "YouTube Video",
+            title: videoData.title || "YouTube Video",
             thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-            duration: "Disponível",
-            formats: [
-                { quality: "1080p / 720p (Máxima)", url: cobaltData.url },
-                { quality: "Apenas Áudio (MP3)", url: cobaltData.url + "&p=audio" }
-            ]
+            duration: new Date(videoData.lengthSeconds * 1000).toISOString().substr(11, 8),
+            formats: formats
         });
 
     } catch (error) {
-        // Fallback de contingência caso a instância principal mude ou apresente lentidão
+        // Fallback seguro caso a instância principal falhe, usando outra da rede descentralizada
         return res.json({
             title: "Vídeo do YouTube",
             thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
             duration: "Pronto",
             formats: [
-                { quality: "Download Direto (Alternativo)", url: `https://cobalt.tools/api/stream?url=https://www.youtube.com/watch?v=${id}` }
+                { quality: "720p HD (Alternativo)", url: `https://yewtu.be/latest_version?id=${id}&itag=22&local=true&download=true` },
+                { quality: "360p SD (Alternativo)", url: `https://yewtu.be/latest_version?id=${id}&itag=18&local=true&download=true` }
             ]
         });
     }
