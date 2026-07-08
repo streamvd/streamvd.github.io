@@ -1,4 +1,4 @@
-const API_ENDPOINT = 'https://sua-futura-api.vercel.app/api/extract'; // Substitua pelo endpoint real da API
+const API_URL = 'https://streamvd-github-io.onrender.com/api/extract'; // Substitua pelo endpoint real da API
 
 const form = document.getElementById('extractor-form');
 const urlInput = document.getElementById('youtube-url');
@@ -28,7 +28,7 @@ form.addEventListener('submit', async (e) => {
 
     try {
         // Simulação de chamada de API. Substitua pelo fetch real quando o backend estiver pronto.
-        const data = await mockApiCall(videoId); 
+        const data = await fetchRealApi(videoId); 
         renderResult(data);
     } catch (err) {
         showError('Erro ao processar o vídeo. Tente novamente.');
