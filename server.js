@@ -14,43 +14,39 @@ app.get('/api/extract', async (req, res) => {
     }
 
     try {
-        const videoUrl = `https://www.youtube.com/watch?v=${id}`;
+        // Consome uma instância pública e estável do Invidious API
+        const response = await fetch(`https://invidious.nerdvpn.de/api/v1/videos/${id}`);
         
-        // Faz o túnel seguro usando uma instância pública estável do Cobalt API
-        const cobaltResponse = await fetch('https://api.cobalt.tools/api/json', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                url: videoUrl,
-                vQuality: '720', // Força uma qualidade estável e otimizada com áudio embutido
-                isAudioMuted: false
-            })
-        });
-
-        const cobaltData = await cobaltResponse.json();
-
-        if (cobaltData.status === 'error') {
-            throw new Error(cobaltData.text);
+        if (!response.ok) {
+            throw new Error('Falha ao obter dados da rede de extração.');
         }
 
-        // Formata a resposta padrão que o seu PWA espera ler
+        const videoData = await response.json();
+
+        // Filtra e mapeia os formatos de vídeo MP4 direto com áudio
+        const formats = videoData.formatStreams
+            .filter(f => f.container === 'mp4' || f.type.includes('mp4'))
+            .map(f => ({
+                quality: f.qualityLabel || f.quality,
+                url: f.url // URL direta de streaming direto dos servidores
+            }));
+
+        if (formats.length === 0) {
+            throw new Error('Nenhum formato MP4 direto disponível para este vídeo.');
+        }
+
         return res.json({
-            title: cobaltData.filename || "YouTube Video",
-            thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-            duration: "Disponível",
-            formats: [
-                { quality: "720p HD", url: cobaltData.url }
-            ]
+            title: videoData.title,
+            thumbnail: videoData.videoThumbnails.find(t => t.quality === 'maxresdefault')?.url || videoData.videoThumbnails[0].url,
+            duration: new Date(videoData.lengthSeconds * 1000).toISOString().substr(11, 8),
+            formats: formats
         });
 
     } catch (error) {
-        return res.status(500).json({ error: 'Erro ao processar bypass do YouTube: ' + error.message });
+        return res.status(500).json({ error: 'Erro de extração estável: ' + error.message });
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`Servidor a correr na porta ${PORT}`);
 });
