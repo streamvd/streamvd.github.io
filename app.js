@@ -70,6 +70,8 @@ function renderResult(data) {
     data.formats.forEach(format => {
         const row = document.createElement('div');
         row.className = 'download-row';
+        
+        // CORREÇÃO: O href deve receber o format.url vindo da API
         row.innerHTML = `
             <span class="quality-tag">${format.quality}</span>
             <a href="${format.url}" class="btn-download" download="${data.title}-${format.quality}.mp4" target="_blank" rel="noopener">
@@ -81,7 +83,6 @@ function renderResult(data) {
 
     resultContainer.classList.remove('hidden');
 }
-
 // Mock temporário para simular o comportamento estrutural do JSON retornado pelo backend
 function mockApiCall(id) {
     return new Promise((resolve) => {
