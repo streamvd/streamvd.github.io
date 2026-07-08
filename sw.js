@@ -1,4 +1,4 @@
-const CACHE_NAME = 'streamfetch-v1';
+const CACHE_NAME = 'streamfetch-v2';
 const ASSETS = [
   '.',
   'index.html',
