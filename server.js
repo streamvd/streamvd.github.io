@@ -1,11 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const ytdl = require('@distube/ytdl-core');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Libera CORS de forma absoluta para o seu domínio do GitHub Pages
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'OPTIONS'],
@@ -22,53 +20,47 @@ app.get('/api/extract', async (req, res) => {
     try {
         const videoUrl = `https://www.youtube.com/watch?v=${id}`;
         
-        // Configura opções de requisição simulando um navegador real para evitar o erro 403
-        const info = await ytdl.getInfo(videoUrl, {
-            requestOptions: {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.9'
-                }
-            }
+        // Requisição para uma instância pública e estável do Cobalt com parâmetros de download forçado
+        const cobaltResponse = await fetch('https://cobalt.api.unblock.casa/api/json', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                url: videoUrl,
+                vQuality: 'max',       // Busca a qualidade máxima disponível (incluindo 1080p)
+                isAudioMuted: false,   // Garante áudio embutido no arquivo
+                filenamePattern: 'classic' // Nome amigável para o arquivo baixado
+            })
         });
-        
-        const formats = info.formats
-            .filter(f => f.container === 'mp4' && f.hasVideo && f.hasAudio) // Garante que o MP4 já venha com som embutido
-            .map(f => ({
-                quality: f.qualityLabel || '360p',
-                url: f.url
-            }));
 
-        if (formats.length === 0) {
-            // Fallback para formatos apenas de vídeo caso não ache combinado
-            const videoOnly = info.formats
-                .filter(f => f.container === 'mp4' && f.hasVideo)
-                .map(f => ({ quality: f.qualityLabel + ' (Sem Áudio)', url: f.url }));
-            
-            return res.json({
-                title: info.videoDetails.title,
-                thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-                duration: "Pronto",
-                formats: videoOnly
-            });
+        const cobaltData = await cobaltResponse.json();
+
+        if (cobaltData.status === 'error' || !cobaltData.url) {
+            throw new Error(cobaltData.text || 'Erro na resposta da API externa.');
         }
 
+        // Retorna as opções estruturadas para o seu PWA renderizar
+        // Nota: A API do Cobalt processa a melhor combinação de vídeo + áudio disponível automaticamente
         return res.json({
-            title: info.videoDetails.title,
+            title: cobaltData.filename || "YouTube Video",
             thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-            duration: "Pronto",
-            formats: formats
+            duration: "Disponível",
+            formats: [
+                { quality: "1080p / 720p (Máxima)", url: cobaltData.url },
+                { quality: "Apenas Áudio (MP3)", url: cobaltData.url + "&p=audio" }
+            ]
         });
 
     } catch (error) {
-        // Se o YouTube bloquear o IP do Render, entregamos um link estruturado via player externo estável
+        // Fallback de contingência caso a instância principal mude ou apresente lentidão
         return res.json({
             title: "Vídeo do YouTube",
             thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
             duration: "Pronto",
             formats: [
-                { quality: "720p HD", url: `https://www.youtube.com/embed/${id}` }
+                { quality: "Download Direto (Alternativo)", url: `https://cobalt.tools/api/stream?url=https://www.youtube.com/watch?v=${id}` }
             ]
         });
     }
