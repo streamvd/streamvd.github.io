@@ -1,11 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const ytdl = require('@distube/ytdl-core');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Permite que o seu PWA aceda a esta API de qualquer origem
 app.use(cors());
 
 app.get('/api/extract', async (req, res) => {
@@ -18,32 +16,41 @@ app.get('/api/extract', async (req, res) => {
     try {
         const videoUrl = `https://www.youtube.com/watch?v=${id}`;
         
-        // Obtém informações detalhadas do vídeo
-        const info = await ytdl.getInfo(videoUrl);
-        
-        // Filtra formatos MP4 que contenham vídeo
-        const formats = info.formats
-            .filter(f => f.container === 'mp4' && f.hasVideo)
-            .map(f => ({
-                quality: f.qualityLabel || '360p',
-                url: f.url
-            }));
+        // Faz o túnel seguro usando uma instância pública estável do Cobalt API
+        const cobaltResponse = await fetch('https://api.cobalt.tools/api/json', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                url: videoUrl,
+                vQuality: '720', // Força uma qualidade estável e otimizada com áudio embutido
+                isAudioMuted: false
+            })
+        });
 
-        // Remove duplicados de resolução se existirem
-        const uniqueFormats = formats.filter((v, i, a) => a.findIndex(t => t.quality === v.quality) === i);
+        const cobaltData = await cobaltResponse.json();
 
+        if (cobaltData.status === 'error') {
+            throw new Error(cobaltData.text);
+        }
+
+        // Formata a resposta padrão que o seu PWA espera ler
         return res.json({
-            title: info.videoDetails.title,
-            thumbnail: info.videoDetails.thumbnails[0].url,
-            duration: new Date(info.videoDetails.lengthSeconds * 1000).toISOString().substr(11, 8),
-            formats: uniqueFormats
+            title: cobaltData.filename || "YouTube Video",
+            thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+            duration: "Disponível",
+            formats: [
+                { quality: "720p HD", url: cobaltData.url }
+            ]
         });
 
     } catch (error) {
-        return res.status(500).json({ error: 'Erro ao processar o vídeo: ' + error.message });
+        return res.status(500).json({ error: 'Erro ao processar bypass do YouTube: ' + error.message });
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`Servidor a correr na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
