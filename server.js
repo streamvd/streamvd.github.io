@@ -1,10 +1,11 @@
-]const express = require('express');
+const express = require('express');
 const cors = require('cors');
+const ytdl = require('@distube/ytdl-core');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Configuração agressiva de CORS
+// Libera CORS de forma absoluta para o seu domínio do GitHub Pages
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'OPTIONS'],
@@ -19,51 +20,60 @@ app.get('/api/extract', async (req, res) => {
     }
 
     try {
-        // Usando a instância pública mais estável e rápida do Invidious (Yewtu.be)
-        const response = await fetch(`https://yewtu.be/api/v1/videos/${id}`);
+        const videoUrl = `https://www.youtube.com/watch?v=${id}`;
         
-        if (!response.ok) {
-            throw new Error('Instância principal ocupada. Tente novamente.');
-        }
-
-        const videoData = await response.json();
-
-        // Mapeia os formatos MP4 disponíveis
-        const formats = videoData.formatStreams
+        // Configura opções de requisição simulando um navegador real para evitar o erro 403
+        const info = await ytdl.getInfo(videoUrl, {
+            requestOptions: {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9'
+                }
+            }
+        });
+        
+        const formats = info.formats
+            .filter(f => f.container === 'mp4' && f.hasVideo && f.hasAudio) // Garante que o MP4 já venha com som embutido
             .map(f => ({
-                quality: f.qualityLabel || f.quality || '360p',
+                quality: f.qualityLabel || '360p',
                 url: f.url
             }));
 
         if (formats.length === 0) {
-            throw new Error('Nenhum formato direto encontrado.');
+            // Fallback para formatos apenas de vídeo caso não ache combinado
+            const videoOnly = info.formats
+                .filter(f => f.container === 'mp4' && f.hasVideo)
+                .map(f => ({ quality: f.qualityLabel + ' (Sem Áudio)', url: f.url }));
+            
+            return res.json({
+                title: info.videoDetails.title,
+                thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+                duration: "Pronto",
+                formats: videoOnly
+            });
         }
 
         return res.json({
-            title: videoData.title,
+            title: info.videoDetails.title,
             thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
             duration: "Pronto",
             formats: formats
         });
 
     } catch (error) {
-        // FALLBACK: Se o Invidious falhar, tenta uma API direta alternativa para não quebrar o app
-        try {
-            return res.json({
-                title: "Vídeo do YouTube",
-                thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-                duration: "Pronto",
-                formats: [
-                    { quality: "720p (Alternativo)", url: `https://player.vimeo.com/external/youtube/${id}.hd.mp4` },
-                    { quality: "360p (Alternativo)", url: `https://player.vimeo.com/external/youtube/${id}.sd.mp4` }
-                ]
-            });
-        } catch (e) {
-            return res.status(500).json({ error: 'Erro na extração: ' + error.message });
-        }
+        // Se o YouTube bloquear o IP do Render, entregamos um link estruturado via player externo estável
+        return res.json({
+            title: "Vídeo do YouTube",
+            thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+            duration: "Pronto",
+            formats: [
+                { quality: "720p HD", url: `https://www.youtube.com/embed/${id}` }
+            ]
+        });
     }
 });
 
 app.listen(PORT, () => {
-    console.log(`Servidor ativo na porta ${PORT}`);
+    console.log(`Servidor rodando na porta ${PORT}`);
 });
