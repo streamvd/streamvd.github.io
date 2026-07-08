@@ -4,6 +4,7 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Libera totalmente o acesso para o seu PWA no GitHub Pages
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'OPTIONS'],
@@ -18,40 +19,35 @@ app.get('/api/extract', async (req, res) => {
     }
 
     try {
-        // Consome a API pública do picoStream que gera downloads diretos limpos
-        const response = await fetch(`https://api.picostream.org/download?id=${id}`);
-        
-        if (!response.ok) {
-            throw new Error('Servidor de download saturado.');
+        // O servidor do Render faz a ponte segura com o processador de mídias
+        const cobaltResponse = await fetch('https://api.cobalt.tools/api/json', {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                url: `https://www.youtube.com/watch?v=${id}`,
+                vQuality: '720',
+                isAudioMuted: false
+            })
+        });
+
+        const cobaltData = await cobaltResponse.json();
+
+        if (cobaltData.status === 'error' || !cobaltData.url) {
+            throw new Error(cobaltData.text || 'Erro no processador externo.');
         }
 
-        const data = await response.json();
-
-        // Mapeia as resoluções reais retornadas (ex: 1080p, 720p, 360p)
-        // Adiciona a flag de download direto na URL gerada pela API
-        const formats = data.links.map(link => ({
-            quality: link.quality,
-            url: link.url.includes('?') ? `${link.url}&download=1` : `${link.url}?download=1`
-        }));
-
+        // Devolve os dados limpos para o seu PWA
         return res.json({
-            title: data.title || "YouTube Video",
+            title: cobaltData.filename || "YouTube Video",
             thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-            duration: data.duration || "Pronto",
-            formats: formats
+            url: cobaltData.url
         });
 
     } catch (error) {
-        // Fallback limpo de download via gateway alternativo sem captcha
-        return res.json({
-            title: "Vídeo do YouTube",
-            thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-            duration: "Pronto",
-            formats: [
-                { quality: "720p HD (Direto)", url: `https://loader.to/api/button/?url=https://www.youtube.com/watch?v=${id}&f=720` },
-                { quality: "360p SD (Direto)", url: `https://loader.to/api/button/?url=https://www.youtube.com/watch?v=${id}&f=360` }
-            ]
-        });
+        return res.status(500).json({ error: 'Falha na extração do stream: ' + error.message });
     }
 });
 
