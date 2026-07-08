@@ -1,5 +1,5 @@
-// Usando uma instância pública direta da API do Invidious que suporta CORS nativo
-const API_URL = 'https://yewtu.be/api/v1/videos/';
+// Ligação direta para a API global, ignorando totalmente o Render
+const DIRECT_API_URL = 'https://yewtu.be/api/v1/videos/';
 
 const form = document.getElementById('extractor-form');
 const urlInput = document.getElementById('youtube-url');
@@ -28,34 +28,35 @@ form.addEventListener('submit', async (e) => {
     showLoader(true);
 
     try {
-        // Faz a requisição direta do seu navegador para a API estável
-        const response = await fetch(`${API_URL}${videoId}`);
-        
-        if (!response.ok) {
-            throw new Error('Servidor ocupado. Tente novamente.');
-        }
-
-        const data = await response.json();
-        
-        // Formata os dados recebidos para o padrão do seu layout
-        const formattedData = {
-            title: data.title,
-            thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
-            duration: new Date(data.lengthSeconds * 1000).toISOString().substr(11, 8),
-            formats: data.formatStreams.map(f => ({
-                quality: f.qualityLabel || f.quality || '360p',
-                url: f.url
-            }))
-        };
-
-        renderResult(formattedData);
+        // Chamada da nova função direta para limpar o cache antigo por completo
+        const data = await executarExtracaoDireta(videoId); 
+        renderResult(data);
     } catch (err) {
-        console.error(err);
-        showError('Erro ao extrair as mídias deste vídeo. Tente outro link ou aguarde um momento.');
+        console.error("Erro capturado no submit:", err);
+        showError('Erro ao extrair mídias. Tente novamente ou mude o link.');
     } finally {
         showLoader(false);
     }
 });
+
+// Nova função com nome diferente para forçar o navegador a atualizar
+async function executarExtracaoDireta(id) {
+    const response = await fetch(`${DIRECT_API_URL}${id}`);
+    if (!response.ok) {
+        throw new Error('Servidor de extração ocupado.');
+    }
+    const data = await response.json();
+    
+    return {
+        title: data.title,
+        thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+        duration: new Date(data.lengthSeconds * 1000).toISOString().substr(11, 8),
+        formats: data.formatStreams.map(f => ({
+            quality: f.qualityLabel || f.quality || '360p',
+            url: f.url
+        }))
+    };
+}
 
 function extractVideoId(url) {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -103,11 +104,10 @@ function renderResult(data) {
     resultContainer.classList.remove('hidden');
 }
 
-// Registar o Service Worker para suporte PWA
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js')
-            .then(reg => console.log('Service Worker registado com sucesso!', reg))
-            .catch(err => console.error('Erro ao registar o Service Worker:', err));
+            .then(reg => console.log('Service Worker ativo.', reg))
+            .catch(err => console.error('Erro no SW:', err));
     });
 }
