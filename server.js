@@ -4,53 +4,45 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Libera totalmente o acesso para o seu PWA no GitHub Pages
-app.use(cors({
-    origin: '*',
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors({ origin: '*' }));
 
 app.get('/api/extract', async (req, res) => {
     const { id } = req.query;
-
-    if (!id) {
-        return res.status(400).json({ error: 'O ID do vídeo é obrigatório.' });
-    }
+    if (!id) return res.status(400).json({ error: 'ID obrigatório.' });
 
     try {
-        // O servidor do Render faz a ponte segura com o processador de mídias
-        const cobaltResponse = await fetch('https://api.cobalt.tools/api/json', {
-            method: 'POST',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                url: `https://www.youtube.com/watch?v=${id}`,
-                vQuality: '720',
-                isAudioMuted: false
-            })
-        });
+        // Rotação de instâncias públicas para evitar bloqueios de IP
+        const instances = ['https://iv.melmac.space', 'https://yewtu.be', 'https://invidious.nerdvpn.de'];
+        let videoData = null;
 
-        const cobaltData = await cobaltResponse.json();
-
-        if (cobaltData.status === 'error' || !cobaltData.url) {
-            throw new Error(cobaltData.text || 'Erro no processador externo.');
+        for (const instance of instances) {
+            try {
+                const response = await fetch(`${instance}/api/v1/videos/${id}`);
+                if (response.ok) {
+                    videoData = await response.json();
+                    break;
+                }
+            } catch (e) { continue; }
         }
 
-        // Devolve os dados limpos para o seu PWA
-        return res.json({
-            title: cobaltData.filename || "YouTube Video",
-            thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-            url: cobaltData.url
-        });
+        if (!videoData) throw new Error('Todas as instâncias estão ocupadas.');
 
+        const formats = videoData.formatStreams
+            .filter(f => f.container === 'mp4' || f.type.includes('mp4'))
+            .map(f => ({
+                quality: f.qualityLabel || f.quality || '360p',
+                // Proxy CORS gratuito para o tráfego do arquivo
+                url: `https://cors-anywhere.herokuapp.com/${f.url}`
+            }));
+
+        return res.json({
+            title: videoData.title,
+            thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
+            formats: formats
+        });
     } catch (error) {
-        return res.status(500).json({ error: 'Falha na extração do stream: ' + error.message });
+        return res.status(500).json({ error: error.message });
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor ativo na porta ${PORT}`));
