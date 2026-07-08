@@ -1,4 +1,4 @@
-const API_URL = 'https://streamvd-github-io.onrender.com/api/extract'; // Substitua pelo endpoint real da API
+const API_URL = 'https://streamvd-github-io.onrender.com/api/extract';
 
 const form = document.getElementById('extractor-form');
 const urlInput = document.getElementById('youtube-url');
@@ -27,15 +27,26 @@ form.addEventListener('submit', async (e) => {
     showLoader(true);
 
     try {
-        // Simulação de chamada de API. Substitua pelo fetch real quando o backend estiver pronto.
+        // Chamada real para o seu backend no Render
         const data = await fetchRealApi(videoId); 
         renderResult(data);
     } catch (err) {
-        showError('Erro ao processar o vídeo. Tente novamente.');
+        console.error(err);
+        showError('Erro ao processar o vídeo. Certifique-se de que o backend está ativo e tente novamente.');
     } finally {
         showLoader(false);
     }
 });
+
+// FUNÇÃO QUE FALTAVA: Consome o seu servidor no Render
+async function fetchRealApi(id) {
+    const response = await fetch(`${API_URL}?id=${id}`);
+    if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro na requisição da API.');
+    }
+    return await response.json();
+}
 
 function extractVideoId(url) {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
@@ -71,7 +82,6 @@ function renderResult(data) {
         const row = document.createElement('div');
         row.className = 'download-row';
         
-        // CORREÇÃO: O href deve receber o format.url vindo da API
         row.innerHTML = `
             <span class="quality-tag">${format.quality}</span>
             <a href="${format.url}" class="btn-download" download="${data.title}-${format.quality}.mp4" target="_blank" rel="noopener">
@@ -83,24 +93,7 @@ function renderResult(data) {
 
     resultContainer.classList.remove('hidden');
 }
-// Mock temporário para simular o comportamento estrutural do JSON retornado pelo backend
-function mockApiCall(id) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            resolve({
-                title: "Como criar PWAs modernos de alta performance",
-                thumbnail: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`,
-                duration: "12:34",
-                formats: [
-                    { quality: "1080p", url: "#" },
-                    { quality: "720p", url: "#" },
-                    { quality: "480p", url: "#" },
-                    { quality: "360p", url: "#" }
-                ]
-            });
-        }, 1500);
-    });
-}
+
 // Registar o Service Worker para suporte PWA
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
