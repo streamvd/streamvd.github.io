@@ -1,4 +1,5 @@
-const API_URL = 'https://streamvd-github-io.onrender.com/api/extract';
+// Usando uma instância pública direta da API do Invidious que suporta CORS nativo
+const API_URL = 'https://yewtu.be/api/v1/videos/';
 
 const form = document.getElementById('extractor-form');
 const urlInput = document.getElementById('youtube-url');
@@ -27,26 +28,34 @@ form.addEventListener('submit', async (e) => {
     showLoader(true);
 
     try {
-        // Chamada real para o seu backend no Render
-        const data = await fetchRealApi(videoId); 
-        renderResult(data);
+        // Faz a requisição direta do seu navegador para a API estável
+        const response = await fetch(`${API_URL}${videoId}`);
+        
+        if (!response.ok) {
+            throw new Error('Servidor ocupado. Tente novamente.');
+        }
+
+        const data = await response.json();
+        
+        // Formata os dados recebidos para o padrão do seu layout
+        const formattedData = {
+            title: data.title,
+            thumbnail: `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+            duration: new Date(data.lengthSeconds * 1000).toISOString().substr(11, 8),
+            formats: data.formatStreams.map(f => ({
+                quality: f.qualityLabel || f.quality || '360p',
+                url: f.url
+            }))
+        };
+
+        renderResult(formattedData);
     } catch (err) {
         console.error(err);
-        showError('Erro ao processar o vídeo. Certifique-se de que o backend está ativo e tente novamente.');
+        showError('Erro ao extrair as mídias deste vídeo. Tente outro link ou aguarde um momento.');
     } finally {
         showLoader(false);
     }
 });
-
-// FUNÇÃO QUE FALTAVA: Consome o seu servidor no Render
-async function fetchRealApi(id) {
-    const response = await fetch(`${API_URL}?id=${id}`);
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Erro na requisição da API.');
-    }
-    return await response.json();
-}
 
 function extractVideoId(url) {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
