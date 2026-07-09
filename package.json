@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "install:yt-dlp": "node scripts/install-yt-dlp.js",
+    "postinstall": "node scripts/install-yt-dlp.js || true",
     "start": "node server.js"
   },
   "dependencies": {

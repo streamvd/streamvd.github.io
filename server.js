@@ -96,12 +96,17 @@ async function detectYtDlp() {
     throw new Error('O binário yt-dlp não foi encontrado. Instale o yt-dlp no ambiente do servidor.');
 }
 
-async function runYtDlp(url, extraArgs = []) {
-    const tool = await detectYtDlp();
-    return execFileAsync(tool.command, [...tool.args, ...extraArgs, url], {
-        timeout: 180000,
-        maxBuffer: 1024 * 1024 * 16
-    });
+async function ensureYtDlpInstalled() {
+    try {
+        return await detectYtDlp();
+    } catch (error) {
+        console.log('yt-dlp não encontrado. Tentando instalar automaticamente...');
+        await execFileAsync(process.execPath, [path.join(__dirname, 'scripts', 'install-yt-dlp.js')], {
+            timeout: 600000,
+            maxBuffer: 1024 * 1024 * 32
+        });
+        return detectYtDlp();
+    }
 }
 
 app.get('/api/status', (_req, res) => {
@@ -122,7 +127,7 @@ app.get('/api/extract', async (req, res) => {
     }
 
     try {
-        const tool = await detectYtDlp();
+        const tool = await ensureYtDlpInstalled();
         const result = await execFileAsync(
             tool.command,
             [
@@ -175,7 +180,7 @@ app.get('/api/download', async (req, res) => {
     }
 
     try {
-        const tool = await detectYtDlp();
+        const tool = await ensureYtDlpInstalled();
         const child = spawn(
             tool.command,
             [
