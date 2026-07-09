@@ -116,7 +116,7 @@ app.get('/api/status', (_req, res) => {
 });
 
 app.get('/api/extract', async (req, res) => {
-    const { url } = req.query;
+    const { url, cookies } = req.query;
 
     if (!url) {
         return res.status(400).json({ error: 'A URL do vídeo é obrigatória.' });
@@ -130,18 +130,28 @@ app.get('/api/extract', async (req, res) => {
 
     try {
         const tool = await ensureYtDlpInstalled();
+        const ytDlpArgs = [
+            ...tool.args,
+            '--no-warnings',
+            '--no-playlist',
+            '--extractor-args',
+            'youtube:player_client=web',
+            '--dump-single-json',
+            '--skip-download'
+        ];
+
+        if (cookies) {
+            const cookieFile = path.join(__dirname, 'tmp', 'cookies.txt');
+            require('fs').mkdirSync(path.dirname(cookieFile), { recursive: true });
+            require('fs').writeFileSync(cookieFile, decodeURIComponent(cookies));
+            ytDlpArgs.push('--cookies', cookieFile);
+        }
+
+        ytDlpArgs.push(url);
+
         const result = await execFileAsync(
             tool.command,
-            [
-                ...tool.args,
-                '--no-warnings',
-                '--no-playlist',
-                '--extractor-args',
-                'youtube:player_client=web',
-                '--dump-single-json',
-                '--skip-download',
-                url
-            ],
+            ytDlpArgs,
             {
                 timeout: 180000,
                 maxBuffer: 1024 * 1024 * 16
@@ -188,19 +198,29 @@ app.get('/api/download', async (req, res) => {
 
     try {
         const tool = await ensureYtDlpInstalled();
+        const ytDlpArgs = [
+            ...tool.args,
+            '--no-warnings',
+            '--no-playlist',
+            '--no-part',
+            '-f',
+            format || 'best',
+            '-o',
+            '-'
+        ];
+
+        if (req.query.cookies) {
+            const cookieFile = path.join(__dirname, 'tmp', 'cookies.txt');
+            require('fs').mkdirSync(path.dirname(cookieFile), { recursive: true });
+            require('fs').writeFileSync(cookieFile, decodeURIComponent(req.query.cookies));
+            ytDlpArgs.push('--cookies', cookieFile);
+        }
+
+        ytDlpArgs.push(url);
+
         const child = spawn(
             tool.command,
-            [
-                ...tool.args,
-                '--no-warnings',
-                '--no-playlist',
-                '--no-part',
-                '-f',
-                format || 'best',
-                '-o',
-                '-',
-                url
-            ],
+            ytDlpArgs,
             {
                 stdio: ['ignore', 'pipe', 'pipe']
             }

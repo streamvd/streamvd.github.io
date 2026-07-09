@@ -5,6 +5,7 @@ const API_URL = `${(window.STREAMFETCH_API_BASE_URL || DEFAULT_API_BASE_URL || '
 
 const form = document.getElementById('extractor-form');
 const urlInput = document.getElementById('youtube-url');
+const cookiesInput = document.getElementById('cookies-input');
 const errorMsg = document.getElementById('input-error');
 const loader = document.getElementById('loader');
 const resultContainer = document.getElementById('result-container');
@@ -36,7 +37,7 @@ form.addEventListener('submit', async (e) => {
     showLoader(true);
 
     try {
-        const data = await fetchFromServer(url);
+        const data = await fetchFromServer(url, cookiesInput.value.trim());
         renderResult(data);
     } catch (err) {
         console.error(err);
@@ -47,8 +48,13 @@ form.addEventListener('submit', async (e) => {
     }
 });
 
-async function fetchFromServer(url) {
-    const response = await fetch(`${API_URL}?url=${encodeURIComponent(url)}`);
+async function fetchFromServer(url, cookies) {
+    const params = new URLSearchParams({ url });
+    if (cookies) {
+        params.set('cookies', cookies);
+    }
+
+    const response = await fetch(`${API_URL}?${params.toString()}`);
     const text = await response.text();
 
     let data = {};
