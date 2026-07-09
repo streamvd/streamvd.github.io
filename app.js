@@ -81,36 +81,58 @@ function extractVideoId(url) {
 }
 
 function showError(msg) {
-    errorMsg.textContent = msg;
+    if (errorMsg) {
+        errorMsg.textContent = msg;
+    }
 }
 
 function resetState() {
-    errorMsg.textContent = '';
-    resultContainer.classList.add('hidden');
+    if (errorMsg) {
+        errorMsg.textContent = '';
+    }
+    if (resultContainer) {
+        resultContainer.classList.add('hidden');
+    }
 }
 
 function showLoader(show) {
-    if (show) {
-        loader.classList.remove('hidden');
-    } else {
-        loader.classList.add('hidden');
+    if (loader) {
+        if (show) {
+            loader.classList.remove('hidden');
+        } else {
+            loader.classList.add('hidden');
+        }
     }
 }
 
 function renderResult(data) {
-    videoThumb.src = data.thumbnail || '';
-    videoDuration.textContent = data.duration || 'Disponível';
-    videoTitle.textContent = data.title || 'Vídeo do YouTube';
-    videoStatus.textContent = data.message || 'Processado no servidor';
+    if (videoThumb) {
+        videoThumb.src = data.thumbnail || '';
+    }
+    if (videoDuration) {
+        videoDuration.textContent = data.duration || 'Disponível';
+    }
+    if (videoTitle) {
+        videoTitle.textContent = data.title || 'Vídeo do YouTube';
+    }
+    if (videoStatus) {
+        videoStatus.textContent = data.message || 'Processado no servidor';
+    }
 
-    resolutionsGrid.innerHTML = '';
+    if (resolutionsGrid) {
+        resolutionsGrid.innerHTML = '';
+    }
 
     if (!Array.isArray(data.formats) || data.formats.length === 0) {
         const emptyState = document.createElement('div');
         emptyState.className = 'empty-state';
         emptyState.textContent = 'Nenhuma opção de mídia foi encontrada para este vídeo.';
-        resolutionsGrid.appendChild(emptyState);
-        resultContainer.classList.remove('hidden');
+        if (resolutionsGrid) {
+            resolutionsGrid.appendChild(emptyState);
+        }
+        if (resultContainer) {
+            resultContainer.classList.remove('hidden');
+        }
         return;
     }
 
@@ -141,10 +163,14 @@ function renderResult(data) {
 
         row.appendChild(meta);
         row.appendChild(downloadLink);
-        resolutionsGrid.appendChild(row);
+        if (resolutionsGrid) {
+            resolutionsGrid.appendChild(row);
+        }
     });
 
-    resultContainer.classList.remove('hidden');
+    if (resultContainer) {
+        resultContainer.classList.remove('hidden');
+    }
 }
 
 if ('serviceWorker' in navigator) {
