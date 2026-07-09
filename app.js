@@ -20,7 +20,7 @@ form.addEventListener('submit', async (e) => {
     e.preventDefault();
     resetState();
 
-    const url = urlInput.value.trim();
+    const url = urlInput && urlInput.value ? urlInput.value.trim() : '';
 
     if (!url) {
         showError('Insira uma URL válida do YouTube.');
@@ -37,7 +37,8 @@ form.addEventListener('submit', async (e) => {
     showLoader(true);
 
     try {
-        const data = await fetchFromServer(url, cookiesInput.value.trim());
+        const cookiesValue = cookiesInput && cookiesInput.value ? cookiesInput.value.trim() : '';
+        const data = await fetchFromServer(url, cookiesValue);
         renderResult(data);
     } catch (err) {
         console.error(err);
