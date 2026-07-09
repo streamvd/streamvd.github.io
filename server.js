@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
 const { spawn, execFile } = require('child_process');
 const path = require('path');
 const { promisify } = require('util');
@@ -10,6 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 let ytDlpCommand = null;
+const COOKIE_FILE_PATH = path.join(__dirname, 'tmp', 'cookies.txt');
 
 function resolveYtDlpBinaryCandidates() {
     const homeDir = process.env.HOME || process.env.USERPROFILE || '';
@@ -111,6 +113,64 @@ async function ensureYtDlpInstalled() {
     }
 }
 
+function writeCookiesFile(cookies) {
+    if (!cookies) {
+        return null;
+    }
+
+    fs.mkdirSync(path.dirname(COOKIE_FILE_PATH), { recursive: true });
+    fs.writeFileSync(COOKIE_FILE_PATH, decodeURIComponent(cookies));
+    return COOKIE_FILE_PATH;
+}
+
+function getYtDlpStrategies() {
+    return [
+        { name: 'web', client: 'web' },
+        { name: 'android', client: 'android' },
+        { name: 'tv', client: 'tv' }
+    ];
+}
+
+async function runYtDlpInfoExtraction(tool, url, cookies) {
+    const cookieFile = writeCookiesFile(cookies);
+    const strategies = getYtDlpStrategies();
+    let lastError = null;
+
+    for (const strategy of strategies) {
+        const args = [
+            ...tool.args,
+            '--no-warnings',
+            '--no-playlist',
+            '--extractor-args',
+            `youtube:player_client=${strategy.client}`,
+            '--dump-single-json',
+            '--skip-download'
+        ];
+
+        if (cookieFile) {
+            args.push('--cookies', cookieFile);
+        }
+
+        args.push(url);
+
+        try {
+            const result = await execFileAsync(tool.command, args, {
+                timeout: 180000,
+                maxBuffer: 1024 * 1024 * 16
+            });
+
+            const info = JSON.parse(result.stdout || '{}');
+            if (info && info.title) {
+                return { info, strategy };
+            }
+        } catch (error) {
+            lastError = error;
+        }
+    }
+
+    throw lastError || new Error('Nenhuma estratégia de extração conseguiu acessar o vídeo.');
+}
+
 app.get('/api/status', (_req, res) => {
     res.json({ ok: true, engine: ytDlpCommand ? ytDlpCommand.command : 'detectando' });
 });
@@ -130,35 +190,7 @@ app.get('/api/extract', async (req, res) => {
 
     try {
         const tool = await ensureYtDlpInstalled();
-        const ytDlpArgs = [
-            ...tool.args,
-            '--no-warnings',
-            '--no-playlist',
-            '--extractor-args',
-            'youtube:player_client=web',
-            '--dump-single-json',
-            '--skip-download'
-        ];
-
-        if (cookies) {
-            const cookieFile = path.join(__dirname, 'tmp', 'cookies.txt');
-            require('fs').mkdirSync(path.dirname(cookieFile), { recursive: true });
-            require('fs').writeFileSync(cookieFile, decodeURIComponent(cookies));
-            ytDlpArgs.push('--cookies', cookieFile);
-        }
-
-        ytDlpArgs.push(url);
-
-        const result = await execFileAsync(
-            tool.command,
-            ytDlpArgs,
-            {
-                timeout: 180000,
-                maxBuffer: 1024 * 1024 * 16
-            }
-        );
-
-        const info = JSON.parse(result.stdout);
+        const { info, strategy } = await runYtDlpInfoExtraction(tool, url, cookies);
         const formats = (info.formats || [])
             .filter((format) => format.vcodec !== 'none' && format.ext)
             .map((format) => ({
@@ -174,7 +206,7 @@ app.get('/api/extract', async (req, res) => {
             title: info.title || 'Vídeo do YouTube',
             thumbnail: info.thumbnail || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
             duration: formatDuration(info.duration),
-            message: 'Processado no servidor com yt-dlp',
+            message: `Processado no servidor com yt-dlp via ${strategy.name}`,
             formats: formats.slice(0, 10)
         });
     } catch (error) {
@@ -190,7 +222,7 @@ app.get('/api/extract', async (req, res) => {
 });
 
 app.get('/api/download', async (req, res) => {
-    const { url, format } = req.query;
+    const { url, format, cookies } = req.query;
 
     if (!url) {
         return res.status(400).json({ error: 'A URL do vídeo é obrigatória.' });
@@ -198,29 +230,29 @@ app.get('/api/download', async (req, res) => {
 
     try {
         const tool = await ensureYtDlpInstalled();
-        const ytDlpArgs = [
+        const cookieFile = writeCookiesFile(cookies);
+        const args = [
             ...tool.args,
             '--no-warnings',
             '--no-playlist',
             '--no-part',
+            '--extractor-args',
+            'youtube:player_client=android',
             '-f',
             format || 'best',
             '-o',
             '-'
         ];
 
-        if (req.query.cookies) {
-            const cookieFile = path.join(__dirname, 'tmp', 'cookies.txt');
-            require('fs').mkdirSync(path.dirname(cookieFile), { recursive: true });
-            require('fs').writeFileSync(cookieFile, decodeURIComponent(req.query.cookies));
-            ytDlpArgs.push('--cookies', cookieFile);
+        if (cookieFile) {
+            args.push('--cookies', cookieFile);
         }
 
-        ytDlpArgs.push(url);
+        args.push(url);
 
         const child = spawn(
             tool.command,
-            ytDlpArgs,
+            args,
             {
                 stdio: ['ignore', 'pipe', 'pipe']
             }
