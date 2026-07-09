@@ -1,4 +1,7 @@
-const API_URL = '/api/extract';
+const DEFAULT_API_BASE_URL = window.location.hostname === 'streamvd.github.io'
+    ? 'https://streamvd-github-io.onrender.com'
+    : '';
+const API_URL = `${(window.STREAMFETCH_API_BASE_URL || DEFAULT_API_BASE_URL || '').replace(/\/$/, '')}/api/extract` || '/api/extract';
 
 const form = document.getElementById('extractor-form');
 const urlInput = document.getElementById('youtube-url');
@@ -45,10 +48,19 @@ form.addEventListener('submit', async (e) => {
 
 async function fetchFromServer(url) {
     const response = await fetch(`${API_URL}?url=${encodeURIComponent(url)}`);
-    const data = await response.json();
+    const text = await response.text();
+
+    let data = {};
+    if (text) {
+        try {
+            data = JSON.parse(text);
+        } catch (error) {
+            throw new Error(`Resposta inválida do servidor (${response.status}). Verifique se a API está online.`);
+        }
+    }
 
     if (!response.ok) {
-        throw new Error(data.error || 'Erro na requisição da API.');
+        throw new Error(data.error || `Erro na requisição da API (${response.status}).`);
     }
 
     return data;

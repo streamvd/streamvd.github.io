@@ -9,6 +9,7 @@ const ASSETS = [
 
 // Instalação do Service Worker e Cache dos ficheiros estáticos
 self.addEventListener('install', (e) => {
+  self.skipWaiting();
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(ASSETS);
@@ -27,15 +28,32 @@ self.addEventListener('activate', (e) => {
           }
         })
       );
-    })
+    }).then(() => self.clients.claim())
   );
 });
 
-// Estratégia de Cache: Tenta cache primeiro, senão vai à rede
 self.addEventListener('fetch', (e) => {
+  const { request } = e;
+
+  if (request.method !== 'GET') {
+    e.respondWith(fetch(request));
+    return;
+  }
+
+  if (request.url.includes('/api/')) {
+    e.respondWith(fetch(request).catch(() => caches.match(request)));
+    return;
+  }
+
   e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      return cachedResponse || fetch(e.request);
-    })
+    fetch(request)
+      .then((response) => {
+        const copy = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(request, copy);
+        });
+        return response;
+      })
+      .catch(() => caches.match(request))
   );
 });
