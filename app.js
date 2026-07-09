@@ -1,4 +1,4 @@
-const API_URL = 'https://streamvd-github-io.onrender.com/api/extract';
+const API_URL = '/api/extract';
 
 const form = document.getElementById('extractor-form');
 const urlInput = document.getElementById('youtube-url');
@@ -7,73 +7,130 @@ const loader = document.getElementById('loader');
 const resultContainer = document.getElementById('result-container');
 
 const videoThumb = document.getElementById('video-thumb');
+const videoDuration = document.getElementById('video-duration');
 const videoTitle = document.getElementById('video-title');
+const videoStatus = document.getElementById('video-status');
 const resolutionsGrid = document.getElementById('resolutions-grid');
 
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    errorMsg.textContent = '';
-    resultContainer.classList.add('hidden');
-    
-    const url = urlInput.value.trim();
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-    const match = url.match(regExp);
-    const videoId = (match && match[2].length === 11) ? match[2] : null;
+    resetState();
 
-    if (!videoId) {
-        errorMsg.textContent = 'URL Inválida.';
+    const url = urlInput.value.trim();
+
+    if (!url) {
+        showError('Insira uma URL válida do YouTube.');
         return;
     }
 
-    loader.classList.remove('hidden');
+    const videoId = extractVideoId(url);
+
+    if (!videoId) {
+        showError('URL inválida. Use um link do YouTube como https://youtu.be/....');
+        return;
+    }
+
+    showLoader(true);
 
     try {
-        const response = await fetch(`${API_URL}?id=${videoId}`);
-        if (!response.ok) throw new Error();
-        const data = await response.json();
-        
-        videoThumb.src = data.thumbnail;
-        videoTitle.textContent = data.title;
-        resolutionsGrid.innerHTML = '';
-        
-        data.formats.forEach(format => {
-            const row = document.createElement('div');
-            row.className = 'download-row';
-            
-            const btn = document.createElement('button');
-            btn.className = 'btn-download';
-            btn.textContent = `Baixar ${format.quality}`;
-            
-            btn.addEventListener('click', async () => {
-                btn.textContent = 'Baixando...';
-                btn.disabled = true;
-                try {
-                    const res = await fetch(format.url);
-                    const blob = await res.blob();
-                    const downloadUrl = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = downloadUrl;
-                    a.download = `${data.title}-${format.quality}.mp4`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    window.URL.revokeObjectURL(downloadUrl);
-                } catch (e) {
-                    alert('Erro ao transferir o arquivo.');
-                } finally {
-                    btn.textContent = `Baixar ${format.quality}`;
-                    btn.disabled = false;
-                }
-            });
-
-            row.appendChild(btn);
-            resolutionsGrid.appendChild(row);
-        });
-
-        resultContainer.classList.remove('hidden');
+        const data = await fetchFromServer(url);
+        renderResult(data);
     } catch (err) {
-        errorMsg.textContent = 'Erro ao processar o vídeo. Tente novamente.';
+        console.error(err);
+        showError(err.message || 'Não foi possível processar o vídeo no servidor.');
     } finally {
-        loader.classList.add('hidden');
+        showLoader(false);
     }
 });
+
+async function fetchFromServer(url) {
+    const response = await fetch(`${API_URL}?url=${encodeURIComponent(url)}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.error || 'Erro na requisição da API.');
+    }
+
+    return data;
+}
+
+function extractVideoId(url) {
+    const regExp = /(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/;
+    const match = url.match(regExp);
+    return match ? match[1] : null;
+}
+
+function showError(msg) {
+    errorMsg.textContent = msg;
+}
+
+function resetState() {
+    errorMsg.textContent = '';
+    resultContainer.classList.add('hidden');
+}
+
+function showLoader(show) {
+    if (show) {
+        loader.classList.remove('hidden');
+    } else {
+        loader.classList.add('hidden');
+    }
+}
+
+function renderResult(data) {
+    videoThumb.src = data.thumbnail || '';
+    videoDuration.textContent = data.duration || 'Disponível';
+    videoTitle.textContent = data.title || 'Vídeo do YouTube';
+    videoStatus.textContent = data.message || 'Processado no servidor';
+
+    resolutionsGrid.innerHTML = '';
+
+    if (!Array.isArray(data.formats) || data.formats.length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        emptyState.textContent = 'Nenhuma opção de mídia foi encontrada para este vídeo.';
+        resolutionsGrid.appendChild(emptyState);
+        resultContainer.classList.remove('hidden');
+        return;
+    }
+
+    data.formats.forEach((format) => {
+        const row = document.createElement('div');
+        row.className = 'download-row';
+
+        const meta = document.createElement('div');
+        meta.className = 'format-meta';
+
+        const qualityTag = document.createElement('span');
+        qualityTag.className = 'quality-tag';
+        qualityTag.textContent = format.quality;
+
+        const details = document.createElement('span');
+        details.className = 'format-details';
+        details.textContent = [format.extension, format.filesize].filter(Boolean).join(' • ');
+
+        meta.appendChild(qualityTag);
+        meta.appendChild(details);
+
+        const downloadLink = document.createElement('a');
+        downloadLink.className = 'btn-download';
+        downloadLink.href = format.downloadUrl || '#';
+        downloadLink.target = '_blank';
+        downloadLink.rel = 'noopener';
+        downloadLink.textContent = 'Baixar';
+
+        row.appendChild(meta);
+        row.appendChild(downloadLink);
+        resolutionsGrid.appendChild(row);
+    });
+
+    resultContainer.classList.remove('hidden');
+}
+
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then((reg) => console.log('Service Worker registado com sucesso!', reg))
+            .catch((err) => console.error('Erro ao registar o Service Worker:', err));
+    });
+}

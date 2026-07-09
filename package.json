@@ -4,10 +4,10 @@
   "description": "API para extração de links do YouTube",
   "main": "server.js",
   "scripts": {
+    "install:yt-dlp": "node scripts/install-yt-dlp.js",
     "start": "node server.js"
   },
   "dependencies": {
-    "@distube/ytdl-core": "^4.15.1",
     "cors": "^2.8.5",
     "express": "^4.19.2"
   }
