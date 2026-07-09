@@ -10,27 +10,27 @@ function run(command, args, label, env = process.env) {
     return true;
 }
 
-function getUserLocalBin() {
-    const homeDir = process.env.HOME || process.env.USERPROFILE || '';
-    return homeDir ? path.join(homeDir, '.local', 'bin') : '';
+function getProjectVenvPath() {
+    return path.join(__dirname, '..', '.yt-dlp-venv');
+}
+
+function getProjectYtDlpBinary() {
+    const venvPath = getProjectVenvPath();
+    const binaryName = process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp';
+    return path.join(venvPath, process.platform === 'win32' ? 'Scripts' : 'bin', binaryName);
 }
 
 function hasYtDlp() {
-    const localBin = getUserLocalBin();
     const candidates = [
-        ['yt-dlp', ['--version']],
-        ['yt-dlp.exe', ['--version']],
-        ['python', ['-m', 'yt_dlp', '--version']],
-        ['python3', ['-m', 'yt_dlp', '--version']]
+        getProjectYtDlpBinary(),
+        'yt-dlp',
+        'yt-dlp.exe',
+        'python',
+        'python3'
     ];
 
-    if (localBin) {
-        candidates.unshift([path.join(localBin, 'yt-dlp'), ['--version']]);
-        candidates.unshift([path.join(localBin, 'yt-dlp.exe'), ['--version']]);
-    }
-
-    for (const [command, args] of candidates) {
-        const result = spawnSync(command, args, { stdio: 'ignore' });
+    for (const candidate of candidates) {
+        const result = spawnSync(candidate, ['--version'], { stdio: 'ignore' });
         if (result.status === 0) {
             return true;
         }
@@ -44,22 +44,41 @@ if (hasYtDlp()) {
     process.exit(0);
 }
 
-const localBin = getUserLocalBin();
-const envWithLocalBin = {
-    ...process.env,
-    PATH: [process.env.PATH, localBin].filter(Boolean).join(path.delimiter)
-};
+const pythonCommands = [];
+if (process.platform === 'win32') {
+    pythonCommands.push('py');
+    pythonCommands.push('python');
+} else {
+    pythonCommands.push('python3');
+    pythonCommands.push('python');
+}
 
-const installSteps = [
-    { label: 'pip via python', command: 'python', args: ['-m', 'pip', 'install', '--user', 'yt-dlp'] },
-    { label: 'pip via python3', command: 'python3', args: ['-m', 'pip', 'install', '--user', 'yt-dlp'] },
-    { label: 'pip', command: 'pip', args: ['install', '--user', 'yt-dlp'] },
-    { label: 'apt-get update', command: 'apt-get', args: ['update'] },
-    { label: 'apt-get install yt-dlp', command: 'apt-get', args: ['install', '-y', 'yt-dlp'] }
-];
+const venvPath = getProjectVenvPath();
+const installSteps = [];
+
+for (const pythonCommand of pythonCommands) {
+    installSteps.push({
+        label: `criar ambiente virtual com ${pythonCommand}`,
+        command: pythonCommand,
+        args: ['-m', 'venv', venvPath]
+    });
+}
 
 for (const step of installSteps) {
-    if (run(step.command, step.args, step.label, envWithLocalBin)) {
+    if (run(step.command, step.args, step.label)) {
+        break;
+    }
+}
+
+const venvBinary = getProjectYtDlpBinary();
+const pipCommand = process.platform === 'win32' ? path.join(venvPath, 'Scripts', 'python.exe') : path.join(venvPath, 'bin', 'python');
+
+const installCommand = [
+    { label: 'instalar yt-dlp no ambiente virtual', command: pipCommand, args: ['-m', 'pip', 'install', '--disable-pip-version-check', 'yt-dlp'] }
+];
+
+for (const step of installCommand) {
+    if (run(step.command, step.args, step.label)) {
         if (hasYtDlp()) {
             console.log('yt-dlp instalado com sucesso.');
             process.exit(0);

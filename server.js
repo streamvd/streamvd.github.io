@@ -14,6 +14,7 @@ let ytDlpCommand = null;
 function resolveYtDlpBinaryCandidates() {
     const homeDir = process.env.HOME || process.env.USERPROFILE || '';
     const userBin = homeDir ? path.join(homeDir, '.local', 'bin', 'yt-dlp') : '';
+    const projectVenvBin = path.join(__dirname, '.yt-dlp-venv', process.platform === 'win32' ? 'Scripts' : 'bin', process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
 
     const candidates = [];
 
@@ -28,6 +29,7 @@ function resolveYtDlpBinaryCandidates() {
         candidates.push({ command: userBin, args: [] });
     }
 
+    candidates.push({ command: projectVenvBin, args: [] });
     candidates.push({ command: 'python', args: ['-m', 'yt_dlp'] });
     candidates.push({ command: 'python3', args: ['-m', 'yt_dlp'] });
 
