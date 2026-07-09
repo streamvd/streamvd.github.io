@@ -228,6 +228,16 @@ app.get('/api/download', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-    console.log(`Servidor rodando na porta ${PORT}`);
-});
+ensureYtDlpInstalled()
+    .then((tool) => {
+        console.log(`yt-dlp pronto em: ${tool.command}`);
+        app.listen(PORT, () => {
+            console.log(`Servidor rodando na porta ${PORT}`);
+        });
+    })
+    .catch((error) => {
+        console.error('Falha ao preparar yt-dlp no startup:', error.message);
+        app.listen(PORT, () => {
+            console.log(`Servidor rodando na porta ${PORT}`);
+        });
+    });

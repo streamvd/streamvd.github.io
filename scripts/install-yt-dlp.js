@@ -20,66 +20,43 @@ function getProjectYtDlpBinary() {
     return path.join(venvPath, process.platform === 'win32' ? 'Scripts' : 'bin', binaryName);
 }
 
-function hasYtDlp() {
-    const candidates = [
-        getProjectYtDlpBinary(),
-        'yt-dlp',
-        'yt-dlp.exe',
-        'python',
-        'python3'
-    ];
-
-    for (const candidate of candidates) {
-        const result = spawnSync(candidate, ['--version'], { stdio: 'ignore' });
-        if (result.status === 0) {
-            return true;
-        }
-    }
-
-    return false;
+function hasProjectLocalYtDlp() {
+    const binaryPath = getProjectYtDlpBinary();
+    const result = spawnSync(binaryPath, ['--version'], { stdio: 'ignore' });
+    return result.status === 0;
 }
 
-if (hasYtDlp()) {
-    console.log('yt-dlp já está disponível.');
+if (hasProjectLocalYtDlp()) {
+    console.log('yt-dlp já está disponível localmente.');
     process.exit(0);
 }
 
-const pythonCommands = [];
-if (process.platform === 'win32') {
-    pythonCommands.push('py');
-    pythonCommands.push('python');
-} else {
-    pythonCommands.push('python3');
-    pythonCommands.push('python');
-}
+const pythonCommands = process.platform === 'win32'
+    ? ['py', 'python']
+    : ['python3', 'python'];
 
 const venvPath = getProjectVenvPath();
-const installSteps = [];
+let createdVenv = false;
 
 for (const pythonCommand of pythonCommands) {
-    installSteps.push({
-        label: `criar ambiente virtual com ${pythonCommand}`,
-        command: pythonCommand,
-        args: ['-m', 'venv', venvPath]
-    });
-}
-
-for (const step of installSteps) {
-    if (run(step.command, step.args, step.label)) {
+    if (run(pythonCommand, ['-m', 'venv', venvPath], `criar ambiente virtual com ${pythonCommand}`)) {
+        createdVenv = true;
         break;
     }
 }
 
-const venvBinary = getProjectYtDlpBinary();
-const pipCommand = process.platform === 'win32' ? path.join(venvPath, 'Scripts', 'python.exe') : path.join(venvPath, 'bin', 'python');
+if (!createdVenv) {
+    console.error('Não foi possível criar o ambiente virtual do projeto.');
+    process.exit(1);
+}
 
-const installCommand = [
-    { label: 'instalar yt-dlp no ambiente virtual', command: pipCommand, args: ['-m', 'pip', 'install', '--disable-pip-version-check', 'yt-dlp'] }
-];
+const pipCommand = process.platform === 'win32'
+    ? path.join(venvPath, 'Scripts', 'python.exe')
+    : path.join(venvPath, 'bin', 'python');
 
-for (const step of installCommand) {
-    if (run(step.command, step.args, step.label)) {
-        if (hasYtDlp()) {
+if (run(pipCommand, ['-m', 'pip', 'install', '--disable-pip-version-check', '--upgrade', 'pip'], 'atualizar pip do ambiente virtual')) {
+    if (run(pipCommand, ['-m', 'pip', 'install', '--disable-pip-version-check', 'yt-dlp'], 'instalar yt-dlp no ambiente virtual')) {
+        if (hasProjectLocalYtDlp()) {
             console.log('yt-dlp instalado com sucesso.');
             process.exit(0);
         }
