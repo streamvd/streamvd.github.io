@@ -40,7 +40,8 @@ form.addEventListener('submit', async (e) => {
         renderResult(data);
     } catch (err) {
         console.error(err);
-        showError(err.message || 'Não foi possível processar o vídeo no servidor.');
+        const message = err.message || 'Não foi possível processar o vídeo no servidor.';
+        showError(message);
     } finally {
         showLoader(false);
     }

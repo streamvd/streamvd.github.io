@@ -168,8 +168,13 @@ app.get('/api/extract', async (req, res) => {
             formats: formats.slice(0, 10)
         });
     } catch (error) {
+        const message = error.message || '';
+        const isBotBlock = /sign in to confirm you’re not a bot|sign in to confirm you're not a bot|bot/i.test(message);
+
         return res.status(500).json({
-            error: 'Não foi possível processar o vídeo no servidor. ' + error.message
+            error: isBotBlock
+                ? 'O YouTube bloqueou a extração deste vídeo como tentativa automática. A solução exige autenticação ou cookies válidos.'
+                : 'Não foi possível processar o vídeo no servidor. ' + message
         });
     }
 });
