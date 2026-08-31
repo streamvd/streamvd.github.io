@@ -1,6 +1,6 @@
 {
-  "name": "Love Songs",
-  "short_name": "LoveSongs",
+  "name": "Radio Love Songs",
+  "short_name": "Radio LoveSongs",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0f172a",
