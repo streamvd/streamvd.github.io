@@ -1,27 +1,17 @@
 {
-  "short_name": "StreamFetch",
-  "name": "StreamFetch - Media Extractor",
+  "name": "Love Songs",
+  "short_name": "LoveSongs",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#121826",
+  "description": "Rádio Love Songs em estilo moderno e player ao vivo.",
   "icons": [
     {
-      "src": "icon-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "icon-512.png",
-      "type": "image/png",
-      "sizes": "512x512"
-    },
-    {
-      "src": "icon-512-maskable.png",
-      "type": "image/png",
+      "src": "img/album.webp",
       "sizes": "512x512",
-      "purpose": "maskable"
+      "type": "image/webp",
+      "purpose": "any maskable"
     }
-  ],
-  "start_url": ".",
-  "background_color": "#0F0F0F",
-  "theme-color": "#0F0F0F",
-  "display": "standalone",
-  "orientation": "portrait"
+  ]
 }

@@ -1,59 +1,52 @@
-const CACHE_NAME = 'streamfetch-v2';
-const ASSETS = [
-  '.',
-  'index.html',
-  'style.css',
-  'app.js',
-  'manifest.json'
+const CACHE_NAME = 'love-songs-v1';
+const APP_SHELL = [
+  './',
+  './index.html',
+  './css/radio.css',
+  './js/radio.js',
+  './manifest.webmanifest',
+  './img/album.webp',
+  './img/alert-circle-outline.svg',
+  './img/chevron-back.svg',
+  './img/checkmark-circle.svg',
+  './img/copy-outline.svg',
+  './img/logo-whatsapp.svg',
+  './img/logo-instagram.svg',
+  './img/logo-github.svg',
+  './img/play.svg',
+  './img/arrow-redo-outline.svg',
+  './img/cafe-outline.svg',
+  './img/close-outline-white.svg'
 ];
 
-// Instalação do Service Worker e Cache dos ficheiros estáticos
-self.addEventListener('install', (e) => {
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
+  );
   self.skipWaiting();
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS);
-    })
-  );
 });
 
-// Limpeza de caches antigos quando houver atualizações
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => Promise.all(
+      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    ))
   );
+  self.clients.claim();
 });
 
-self.addEventListener('fetch', (e) => {
-  const { request } = e;
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
 
-  if (request.method !== 'GET') {
-    e.respondWith(fetch(request));
-    return;
-  }
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
 
-  if (request.url.includes('/api/')) {
-    e.respondWith(fetch(request).catch(() => caches.match(request)));
-    return;
-  }
-
-  e.respondWith(
-    fetch(request)
-      .then((response) => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(request, copy);
-        });
+      return fetch(event.request).then((response) => {
+        const cloned = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cloned));
         return response;
-      })
-      .catch(() => caches.match(request))
+      }).catch(() => caches.match('./index.html'));
+    })
   );
 });

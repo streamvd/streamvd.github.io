@@ -1,59 +1,162 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>StreamFetch - Media Extractor</title>
-    <link rel="stylesheet" href="style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0d1321">
+    <meta name="description" content="Love Songs - rádio com música romântica, player ao vivo e visual moderno para desktop e mobile.">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#0F0F0F">
+    <link rel="stylesheet" href="radio.css">
+    <title>Love Songs | Rádio</title>
 </head>
+
 <body>
-    <main class="app-container">
-        <header class="app-header">
-            <h1 class="brand-title">Stream<span>Fetch</span></h1>
-            <p class="brand-subtitle">Insira o link do YouTube para extrair as mídias disponíveis</p>
+    <div class="app-shell">
+        <header class="topbar">
+            <button id="backButton" class="icon-button" aria-label="Voltar" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                </svg>
+            </button>
+
+            <div class="brand-wrap">
+                <span class="live-pill">
+                    <span class="live-dot"></span>
+                    AO VIVO
+                </span>
+                <h1>LOVE SONGS</h1>
+            </div>
+
+            <button id="aboutButton" class="icon-button" aria-label="Sobre" type="button">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                        d="M11 7h2v2h-2zm0 4h2v6h-2zm1-9C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+                </svg>
+            </button>
         </header>
 
-        <section class="input-section">
-            <form id="extractor-form" novalidate>
-                <div class="input-group">
-                    <input 
-                        type="url" 
-                        id="youtube-url" 
-                        placeholder="https://youtu.be/..." 
-                        required
-                        aria-label="Link do vídeo do YouTube"
-                    >
-                    <button type="submit" id="btn-submit" aria-label="Analisar link">
-                        <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <main class="player-panel">
+            <div class="art-frame">
+                <img id="album-art" src="img/album.webp" alt="Capa da rádio Love Songs">
+            </div>
+
+            <div class="track-meta">
+                <div class="meta-header">
+                    <span class="meta-kicker">Tocando agora</span>
+                    <span class="meta-live">AO VIVO</span>
+                </div>
+
+                <h2 id="track-title">Carregando...</h2>
+                <p id="artist-name">Carregando...</p>
+
+                <div class="player-controls">
+                    <button id="playPauseBtn" class="play-button" type="button" aria-label="Reproduzir ou pausar">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
                     </button>
-                </div>
-                <span class="error-message" id="input-error" aria-live="polite"></span>
-            </form>
-        </section>
+                    <div class="btns">
+                        <div class="secondary-actions">
+                            <button id="shareBtn" class="action-button" type="button" aria-label="Compartilhar">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path
+                                        d="M18 16a3 3 0 0 0-2.24 1l-7.1-4.09a3.12 3.12 0 0 0 0-1.82L15.76 7a3 3 0 1 0-.76-1.97L7.9 9.12a3 3 0 1 0 0 5.76l7.1 4.09A3 3 0 1 0 18 16z" />
+                                </svg>
+                                <span>Compartilhar</span>
+                            </button>
 
-        <section class="loader-section hidden" id="loader">
-            <div class="spinner"></div>
-            <p>Processando manifestos de vídeo...</p>
-        </section>
-
-        <section class="result-section hidden" id="result-container">
-            <div class="video-preview-card">
-                <div class="thumbnail-wrapper">
-                    <img id="video-thumb" src="" alt="Thumbnail do vídeo">
-                    <span id="video-duration" class="badge">00:00</span>
-                </div>
-                <h2 id="video-title" class="video-title">Título do Vídeo</h2>
-            </div>
-
-            <div class="download-options">
-                <h3 class="section-title">Resoluções Disponíveis</h3>
-                <div class="options-grid" id="resolutions-grid">
+                            <button id="donateBtn" class="action-button" type="button" aria-label="Contribuir">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path
+                                        d="M12 21.35 10.55 20C5.4 15.36 2 12.28 2 8.5A4.5 4.5 0 0 1 6.5 4c1.74 0 3.41.81 4.5 2.09A6.06 6.06 0 0 1 15.5 4 4.5 4.5 0 0 1 20 8.5c0 3.78-3.4 6.86-8.55 11.5L12 21.35z" />
+                                </svg>
+                                <span>Contribuir</span>
+                            </button>
+                        </div>
                     </div>
+                </div>
             </div>
-        </section>
-    </main>
-    <script src="app.js"></script>
+        </main>
+    </div>
+
+    <aside id="aboutSection" class="modal-panel" aria-hidden="true">
+        <div class="modal-card about-card">
+            <div class="modal-header">
+                <button class="modal-close" data-close="about" type="button" aria-label="Fechar">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4l-6.3 6.31-1.41-1.42 6.3-6.29-6.3-6.29L4.29 4.7l6.3 6.29 6.3-6.29z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body about-body">
+                <img id="aboutLogo" src="img/album.webp" alt="Logo da rádio Love Songs" class="about-logo">
+                <h3>Love Songs</h3>
+                <p>A trilha sonora do amor</p>
+
+                <div class="info-box">
+                    <p>por Waltemar Carneiro</p>
+                    <p>Versão 4.2.0</p>
+                    <p>© 2026 Todos os direitos reservados</p>
+                </div>
+
+                <div class="social-links">
+                    <a href="https://wa.me/+5581971027858" target="_blank" rel="noreferrer" aria-label="WhatsApp">
+                        <img src="img/logo-whatsapp.svg" alt="WhatsApp">
+                    </a>
+                    <a href="#" target="_blank" rel="noreferrer" aria-label="Instagram">
+                        <img src="img/logo-instagram.svg" alt="Instagram">
+                    </a>
+                    <a href="#" target="_blank" rel="noreferrer" aria-label="GitHub">
+                        <img src="img/logo-github.svg" alt="GitHub">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <aside id="donateModal" class="modal-panel donate-panel" aria-hidden="true">
+        <div class="modal-card donate-card">
+            <div class="modal-header">
+                <button class="modal-close" data-close="donate" type="button" aria-label="Fechar">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4l-6.3 6.31-1.41-1.42 6.3-6.29-6.3-6.29L4.29 4.7l6.3 6.29 6.3-6.29z" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-body donate-body">
+                <img src="img/checkmark-circle.svg" alt="Sucesso" class="success-icon">
+                <h3>Código PIX Copiado!</h3>
+                <p>Use a opção “Copia e Cola” no app do seu banco</p>
+
+                <div class="steps-box">
+                    <p>Abra o app do seu banco</p>
+                    <p>Escolha pagar com PIX</p>
+                    <p>Selecione “Copia e Cola”</p>
+                    <p>Cole o código e confirme</p>
+                </div>
+
+                <button id="copyPixBtn" class="copy-button" type="button">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z" />
+                    </svg>
+                    Copiar Novamente
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <audio id="audio" preload="auto" crossOrigin="anonymous"
+        src="https://playerservices.streamtheworld.com/api/livestream-redirect/SRGSTR03.mp3"></audio>
+
+    <script src="./js/radio.js"></script>
 </body>
+
 </html>
