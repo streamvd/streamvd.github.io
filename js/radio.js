@@ -112,10 +112,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const metaKey = `${title}::${artist}`;
 
         if (metaKey === lastAppliedMetaKey) {
+            if (cover && cover !== defaultState.cover) {
+                setCoverImage(cover);
+            }
             return;
         }
 
         lastAppliedMetaKey = metaKey;
+        setCoverImage(cover);
         applyStationMeta({ title, artist, cover });
         if (!meta?.cover) {
             fetchTrackCover(title, artist);
