@@ -14,7 +14,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const backButton = document.getElementById('backButton');
 
     const STREAM_URL = 'https://playerservices.streamtheworld.com/api/livestream-redirect/SRGSTR03.mp3';
-    const PLAYLIST_URL = 'http://127.0.0.1:3000/api/nowplaying';
+    const LOCAL_PROXY_URL = 'http://127.0.0.1:3000/api/nowplaying';
+    const DEFAULT_PUBLIC_PROXY_URL = 'https://streamvd-github-io.onrender.com/api/nowplaying';
+
+    const runtimeProxyUrl = window.RADIO_CONFIG && window.RADIO_CONFIG.proxyUrl
+        ? window.RADIO_CONFIG.proxyUrl
+        : (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? LOCAL_PROXY_URL
+            : DEFAULT_PUBLIC_PROXY_URL);
+
+    const PLAYLIST_URL = runtimeProxyUrl;
     const METADATA_POLL_MS = 5000;
     const PIX_CODE = '00020126580014br.gov.bcb.pix013616f06530-c133-47f2-b4d4-452e580401fb5204000053039865802BR5922WALTEMAR LIMA CARNEIRO6006MANAUS62580520SAN2023012101152512450300017br.gov.bcb.brcode01051.0.063049962';
 
