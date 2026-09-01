@@ -1,22 +1,22 @@
 const CACHE_NAME = 'love-songs-v1';
 const APP_SHELL = [
-  './',
-  './index.html',
-  './css/radio.css',
-  './js/radio.js',
-  './manifest.webmanifest',
-  './img/album.webp',
-  './img/alert-circle-outline.svg',
-  './img/chevron-back.svg',
-  './img/checkmark-circle.svg',
-  './img/copy-outline.svg',
-  './img/logo-whatsapp.svg',
-  './img/logo-instagram.svg',
-  './img/logo-github.svg',
-  './img/play.svg',
-  './img/arrow-redo-outline.svg',
-  './img/cafe-outline.svg',
-  './img/close-outline-white.svg'
+  '/',
+  '/index.html',
+  '/radio.css',
+  '/js/radio.js',
+  '/manifest.json',
+  '/img/album.webp',
+  '/img/alert-circle-outline.svg',
+  '/img/chevron-back.svg',
+  '/img/checkmark-circle.svg',
+  '/img/copy-outline.svg',
+  '/img/logo-whatsapp.svg',
+  '/img/logo-instagram.svg',
+  '/img/logo-github.svg',
+  '/img/play.svg',
+  '/img/arrow-redo-outline.svg',
+  '/img/cafe-outline.svg',
+  '/img/close-outline-white.svg'
 ];
 
 self.addEventListener('install', (event) => {
