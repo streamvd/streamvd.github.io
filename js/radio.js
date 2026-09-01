@@ -111,17 +111,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const cover = meta?.cover || defaultState.cover;
         const metaKey = `${title}::${artist}`;
 
+        const nextCover = cover && cover !== defaultState.cover ? cover : defaultState.cover;
         if (metaKey === lastAppliedMetaKey) {
-            if (cover && cover !== defaultState.cover) {
-                setCoverImage(cover);
+            if (nextCover !== defaultState.cover || !albumArtEl.src.endsWith('/img/album.webp')) {
+                setCoverImage(nextCover);
             }
             return;
         }
 
         lastAppliedMetaKey = metaKey;
-        setCoverImage(cover);
-        applyStationMeta({ title, artist, cover });
-        if (!meta?.cover) {
+        setCoverImage(nextCover);
+        applyStationMeta({ title, artist, cover: nextCover });
+
+        if (!meta?.cover || meta.cover === defaultState.cover) {
             fetchTrackCover(title, artist);
         }
     }

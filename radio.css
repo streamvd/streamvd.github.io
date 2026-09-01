@@ -506,23 +506,37 @@ img {
         padding: 12px 16px 14px;
     }
 
+    .topbar {
+        margin-bottom: 4px;
+    }
+
+    .brand-wrap h1 {
+        margin-top: 0;
+        font-size: clamp(1rem, 3vw, 1.5rem);
+        letter-spacing: 0.12em;
+        text-align: left;
+    }
+
     .player-panel {
         display: grid;
-        grid-template-columns: minmax(200px, 38vw) minmax(260px, 1fr);
+        grid-template-columns: minmax(180px, 34vw) minmax(260px, 1fr);
         gap: 18px;
         align-items: center;
-        padding: 8px 0;
+        justify-content: center;
+        padding: 0;
+        margin-top: 0;
+        justify-items: center;
     }
 
     .art-frame {
-        width: min(100%, 300px);
+        width: min(100%, 240px);
         justify-self: center;
     }
 
     .track-meta {
         text-align: left;
         align-items: flex-start;
-        justify-content: center;
+        justify-content: flex-end;
         width: 100%;
     }
 
@@ -537,7 +551,24 @@ img {
     }
 
     .player-controls {
-        align-items: flex-start;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .secondary-actions {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 10px;
+    }
+
+    .action-button,
+    .copy-button {
+        min-height: 44px;
+        padding: 8px 12px;
     }
 }
 
