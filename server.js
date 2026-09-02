@@ -50,24 +50,51 @@ function normalizeTrackText(value) {
 }
 
 function extractTrackFromHtml(html) {
-  const patterns = [
-    /"track"\s*:\s*\{[^]*?"type"\s*:\s*"track"[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g,
-    /"currentTrack"\s*:\s*\{[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g,
-    /"nowPlaying"\s*:\s*\{[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g
-  ];
+  const nextDataMatch = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*type="application\/json">([\s\S]*?)<\/script>/i);
+  if (!nextDataMatch) {
+    const patterns = [
+      /"track"\s*:\s*\{[^]*?"type"\s*:\s*"track"[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g,
+      /"currentTrack"\s*:\s*\{[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g,
+      /"nowPlaying"\s*:\s*\{[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g
+    ];
 
-  for (const pattern of patterns) {
-    const matches = [...html.matchAll(pattern)];
+    for (const pattern of patterns) {
+      const matches = [...html.matchAll(pattern)];
 
-    for (const match of matches) {
-      const title = normalizeTrackText(decodeEscaped(match[1]));
-      const artist = normalizeTrackText(decodeEscaped(match[2]));
-      const cover = normalizeTrackText(decodeEscaped(match[3]));
+      for (const match of matches) {
+        const title = normalizeTrackText(decodeEscaped(match[1]));
+        const artist = normalizeTrackText(decodeEscaped(match[2]));
+        const cover = normalizeTrackText(decodeEscaped(match[3]));
 
-      if (title && artist && cover) {
-        return { title, artist, cover: cover || '/img/album.webp' };
+        if (title && artist && cover) {
+          return { title, artist, cover: cover || '/img/album.webp' };
+        }
       }
     }
+
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(nextDataMatch[1]);
+    const playlistGroups = payload?.props?.pageProps?.initialPlaylist || [];
+
+    for (const group of playlistGroups) {
+      if (!Array.isArray(group)) continue;
+
+      for (const item of group) {
+        const track = item?.track || item;
+        const title = normalizeTrackText(track?.title || '');
+        const artist = normalizeTrackText(track?.artistName || '');
+        const cover = normalizeTrackText(track?.imageUrl || '');
+
+        if (title && artist && cover) {
+          return { title, artist, cover };
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Falha ao parsear __NEXT_DATA__:', error);
   }
 
   return null;
