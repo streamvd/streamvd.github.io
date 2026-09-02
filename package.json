@@ -1,0 +1,13 @@
+{
+  "name": "love-songs-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Proxy de metadata da rádio Love Songs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
