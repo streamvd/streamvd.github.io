@@ -11,7 +11,7 @@
     --primary: #59e0a9;
     --primary-2: #5bb7ff;
     --accent: #e96ae6;
-    --danger: #ff6f88;
+    --danger: #ff5f67;
     --danger-2: #ff9d67;
     --white: #ffffff;
     --line: rgba(255, 255, 255, 0.09);
@@ -161,11 +161,12 @@ img {
 }
 
 .brand-wrap h1 {
-    margin-top: 10px;
-    font-size: clamp(1.5rem, 4vw, 2.6rem);
+    font-size: clamp(1.5rem, 4vw, 2rem);
     letter-spacing: 0.14em;
-    font-weight: 800;
+    font-weight: 700;
     color: var(--white);
+    opacity: 0.5;
+    text-align: left;
 }
 
 .player-panel {
@@ -285,7 +286,7 @@ img {
     height: 72px;
     border: none;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--danger), var(--danger-2));
+    background: linear-gradient(135deg, var(--danger), var(--danger));
     color: var(--white);
     display: inline-flex;
     align-items: center;
