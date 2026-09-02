@@ -684,6 +684,7 @@ img {
         width: 100%;
         align-items: center;
         flex-direction: row;
+        justify-content: space-between;
     }
 
     .secondary-actions {
