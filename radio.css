@@ -714,10 +714,17 @@ img {
 
 @media (max-width: 480px) {
     body {
+        display: block;
         padding: 0;
         overflow-x: hidden;
-        overflow-y: hidden;
+        overflow-y: auto;
         overscroll-behavior-y: auto;
+    }
+
+    body::after {
+        content: "";
+        display: block;
+        height: 1px;
     }
 
     .app-shell {
