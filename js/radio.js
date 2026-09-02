@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let touchStartY = 0;
     let pullDistance = 0;
     let isRefreshingManual = false;
+    let activeTrackVersion = 0;
+    const coverCache = new Map();
 
     function setPullIndicatorState(isActive, isLoading) {
         if (!appShell || !pullIndicator) return;
@@ -120,9 +122,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        const trackVersion = ++activeTrackVersion;
         lastAppliedMetaKey = metaKey;
-        applyStationMeta({ title, artist, cover: defaultState.cover });
-        fetchTrackCover(title, artist);
+        trackTitleEl.textContent = title;
+        artistNameEl.textContent = artist;
+        document.title = `${title} • ${artist} | Love Songs`;
+        setCoverImage(defaultState.cover);
+        fetchTrackCover(title, artist, metaKey, trackVersion);
     }
 
     function setCurrentMeta(meta) {
@@ -132,25 +138,38 @@ document.addEventListener('DOMContentLoaded', () => {
         const metaKey = `${title}::${artist}`;
 
         const nextCover = cover && cover !== defaultState.cover ? cover : defaultState.cover;
+
         if (metaKey === lastAppliedMetaKey) {
-            if (nextCover !== defaultState.cover || !albumArtEl.src.endsWith('/img/album.webp')) {
+            if (nextCover !== defaultState.cover) {
                 setCoverImage(nextCover);
             }
             return;
         }
 
+        const trackVersion = ++activeTrackVersion;
         lastAppliedMetaKey = metaKey;
+        trackTitleEl.textContent = title;
+        artistNameEl.textContent = artist;
+        document.title = `${title} • ${artist} | Love Songs`;
         setCoverImage(nextCover);
-        applyStationMeta({ title, artist, cover: nextCover });
 
         if (!meta?.cover || meta.cover === defaultState.cover) {
-            fetchTrackCover(title, artist);
+            fetchTrackCover(title, artist, metaKey, trackVersion);
         }
     }
 
-    async function fetchTrackCover(title, artist) {
+    async function fetchTrackCover(title, artist, expectedMetaKey, expectedVersion) {
         const query = `${artist} ${title}`.trim();
         if (!query) {
+            return;
+        }
+
+        const cacheKey = `${artist}::${title}`.toLowerCase();
+        if (coverCache.has(cacheKey) && expectedMetaKey === lastAppliedMetaKey && expectedVersion === activeTrackVersion) {
+            const cachedCover = coverCache.get(cacheKey);
+            if (cachedCover) {
+                setCoverImage(cachedCover);
+            }
             return;
         }
 
@@ -170,9 +189,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const cover = (result.artworkUrl100 || result.artworkUrl60 || '').replace('100x100', '1000x1000');
-            if (cover) {
-                setCoverImage(cover);
+            if (!cover) {
+                return;
             }
+
+            if (expectedMetaKey !== lastAppliedMetaKey || expectedVersion !== activeTrackVersion) {
+                return;
+            }
+
+            coverCache.set(cacheKey, cover);
+            setCoverImage(cover);
         } catch (error) {
             console.warn('Não foi possível buscar a capa da música:', error);
         }
