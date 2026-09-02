@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const audio = document.getElementById('audio');
+    const appShell = document.getElementById('appShell');
+    const pullIndicator = document.getElementById('pullIndicator');
     const playPauseBtn = document.getElementById('playPauseBtn');
     const trackTitleEl = document.getElementById('track-title');
     const artistNameEl = document.getElementById('artist-name');
@@ -35,6 +37,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let lastAppliedMetaKey = '';
     let coverRequestToken = 0;
+    let touchStartY = 0;
+    let pullDistance = 0;
+    let isRefreshingManual = false;
+
+    function setPullIndicatorState(isActive, isLoading) {
+        if (!appShell || !pullIndicator) return;
+
+        appShell.classList.toggle('pull-active', isActive);
+        appShell.classList.toggle('is-refreshing', isLoading);
+        pullIndicator.setAttribute('aria-hidden', String(!isActive && !isLoading));
+        pullIndicator.querySelector('.pull-text').textContent = isLoading ? 'Atualizando...' : 'Atualizar';
+    }
+
+    function updatePullIndicator(offset) {
+        if (!appShell) return;
+        const clampedOffset = Math.max(0, Math.min(offset, 120));
+        appShell.style.setProperty('--pull-offset', `${clampedOffset}px`);
+    }
 
     function setPlayButtonState(isPlaying) {
         playPauseBtn.classList.toggle('playing', isPlaying);
@@ -433,6 +453,90 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function manualRefresh() {
+        if (isRefreshingManual) return;
+
+        isRefreshingManual = true;
+        setPullIndicatorState(true, true);
+
+        try {
+            const playlistTrack = await fetchPlaylistCurrentTrack();
+            if (playlistTrack) {
+                setCurrentMeta({
+                    title: playlistTrack.title,
+                    artist: playlistTrack.artist,
+                    cover: playlistTrack.cover || defaultState.cover
+                });
+            } else {
+                const streamTitle = await fetchCurrentStreamTitle();
+                if (streamTitle) {
+                    updateTrackMetadata(streamTitle);
+                }
+            }
+        } catch (error) {
+            console.warn('Falha ao atualizar manualmente:', error);
+        } finally {
+            setPullIndicatorState(false, false);
+            updatePullIndicator(0);
+            setTimeout(() => {
+                isRefreshingManual = false;
+            }, 200);
+        }
+    }
+
+    function handleTouchPullStart(event) {
+        if (isRefreshingManual || document.querySelector('.modal-panel.visible')) {
+            return;
+        }
+
+        const touch = event.touches && event.touches[0];
+        if (!touch || window.scrollY > 0 || document.documentElement.scrollTop > 0) {
+            return;
+        }
+
+        touchStartY = touch.clientY;
+        pullDistance = 0;
+    }
+
+    function handleTouchPullMove(event) {
+        if (isRefreshingManual || touchStartY === 0) {
+            return;
+        }
+
+        const touch = event.touches && event.touches[0];
+        if (!touch || window.scrollY > 0 || document.documentElement.scrollTop > 0) {
+            return;
+        }
+
+        const delta = touch.clientY - touchStartY;
+        if (delta <= 0) {
+            return;
+        }
+
+        pullDistance = Math.min(delta, 120);
+        event.preventDefault();
+        setPullIndicatorState(true, false);
+        updatePullIndicator(pullDistance);
+    }
+
+    function handleTouchPullEnd() {
+        if (touchStartY === 0) {
+            return;
+        }
+
+        const shouldRefresh = pullDistance >= 90;
+        touchStartY = 0;
+        pullDistance = 0;
+
+        if (shouldRefresh) {
+            manualRefresh();
+            return;
+        }
+
+        setPullIndicatorState(false, false);
+        updatePullIndicator(0);
+    }
+
     function registerServiceWorker() {
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -442,6 +546,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+
+    document.addEventListener('touchstart', handleTouchPullStart, { passive: true });
+    document.addEventListener('touchmove', handleTouchPullMove, { passive: false });
+    document.addEventListener('touchend', handleTouchPullEnd, { passive: true });
+    document.addEventListener('touchcancel', handleTouchPullEnd, { passive: true });
 
     playPauseBtn.addEventListener('click', togglePlayback);
     aboutButton.addEventListener('click', () => openModal(drawerAbout));

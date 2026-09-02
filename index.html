@@ -33,7 +33,12 @@
 </head>
 
 <body>
-    <div class="app-shell">
+    <div class="app-shell" id="appShell">
+        <div id="pullIndicator" class="pull-indicator" aria-live="polite" aria-hidden="true">
+            <span class="pull-spinner" aria-hidden="true"></span>
+            <span class="pull-text">Atualizar</span>
+        </div>
+
         <header class="topbar">
             <button id="backButton" class="icon-button" aria-label="Voltar" type="button">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
