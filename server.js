@@ -50,15 +50,23 @@ function normalizeTrackText(value) {
 }
 
 function extractTrackFromHtml(html) {
-  const matches = [...html.matchAll(/"track"\s*:\s*\{[^]*?"type"\s*:\s*"track"[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g)];
+  const patterns = [
+    /"track"\s*:\s*\{[^]*?"type"\s*:\s*"track"[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g,
+    /"currentTrack"\s*:\s*\{[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g,
+    /"nowPlaying"\s*:\s*\{[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g
+  ];
 
-  for (const match of matches) {
-    const title = normalizeTrackText(decodeEscaped(match[1]));
-    const artist = normalizeTrackText(decodeEscaped(match[2]));
-    const cover = normalizeTrackText(decodeEscaped(match[3]));
+  for (const pattern of patterns) {
+    const matches = [...html.matchAll(pattern)];
 
-    if (title && artist) {
-      return { title, artist, cover: cover || '/img/album.webp' };
+    for (const match of matches) {
+      const title = normalizeTrackText(decodeEscaped(match[1]));
+      const artist = normalizeTrackText(decodeEscaped(match[2]));
+      const cover = normalizeTrackText(decodeEscaped(match[3]));
+
+      if (title && artist && cover) {
+        return { title, artist, cover: cover || '/img/album.webp' };
+      }
     }
   }
 

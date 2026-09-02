@@ -68,15 +68,23 @@ function decodeEscaped(value) {
 }
 
 function extractTrackFromHtml(html) {
-  const matches = [...html.matchAll(/"track"\s*:\s*\{[^]*?"type"\s*:\s*"track"[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g)];
+  const patterns = [
+    /"track"\s*:\s*\{[^]*?"type"\s*:\s*"track"[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g,
+    /"currentTrack"\s*:\s*\{[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g,
+    /"nowPlaying"\s*:\s*\{[^]*?"title"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"artistName"\s*:\s*"((?:\\.|[^"\\])*)"[^]*?"imageUrl"\s*:\s*"((?:\\.|[^"\\])*)"/g
+  ];
 
-  for (const match of matches) {
-    const title = decodeEscaped(match[1]).replace(/\s+/g, ' ').trim();
-    const artist = decodeEscaped(match[2]).replace(/\s+/g, ' ').trim();
-    const cover = decodeEscaped(match[3]).replace(/\s+/g, ' ').trim();
+  for (const pattern of patterns) {
+    const matches = [...html.matchAll(pattern)];
 
-    if (title && artist) {
-      return { title, artist, cover };
+    for (const match of matches) {
+      const title = decodeEscaped(match[1]).replace(/\s+/g, ' ').trim();
+      const artist = decodeEscaped(match[2]).replace(/\s+/g, ' ').trim();
+      const cover = decodeEscaped(match[3]).replace(/\s+/g, ' ').trim();
+
+      if (title && artist && cover) {
+        return { title, artist, cover };
+      }
     }
   }
 
