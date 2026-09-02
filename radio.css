@@ -683,6 +683,7 @@ img {
         align-items: flex-start;
         width: 100%;
         align-items: center;
+        flex-direction: row;
     }
 
     .secondary-actions {
