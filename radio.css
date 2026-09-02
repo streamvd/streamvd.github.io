@@ -376,6 +376,47 @@ img {
     text-align: center;
 }
 
+.about-brand,
+.about-details,
+.donate-copy,
+.donate-actions {
+    width: 100%;
+}
+
+.about-brand,
+.about-details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.about-details {
+    margin-top: 12px;
+}
+
+.donate-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.donate-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.donate-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
 .about-logo {
     width: 120px;
     height: 120px;
@@ -476,6 +517,63 @@ img {
 
 .copy-button {
     min-width: 220px;
+    width: 100%;
+}
+
+@media (min-width: 700px) {
+    .modal-card {
+        width: min(90vw, 760px);
+    }
+
+    .about-body {
+        display: grid;
+        grid-template-columns: minmax(200px, 0.9fr) minmax(260px, 1.2fr);
+        gap: 24px;
+        align-items: center;
+        text-align: left;
+    }
+
+    .about-brand,
+    .about-details {
+        align-items: flex-start;
+        text-align: left;
+        margin-top: 0;
+    }
+
+    .about-details {
+        width: 100%;
+    }
+
+    .donate-body {
+        display: grid;
+        grid-template-columns: minmax(220px, 0.9fr) minmax(280px, 1.4fr);
+        gap: 24px;
+        align-items: center;
+        text-align: left;
+    }
+
+    .donate-copy,
+    .donate-actions {
+        width: 100%;
+    }
+
+    .donate-copy {
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .donate-actions {
+        align-items: stretch;
+    }
+
+    .success-icon {
+        margin-bottom: 14px;
+    }
+
+    .copy-button {
+        width: fit-content;
+        min-width: 220px;
+    }
 }
 
 @keyframes pulse {
@@ -498,6 +596,47 @@ img {
 @media (orientation: landscape) and (max-width: 900px) {
     body {
         padding: 8px 12px;
+    }
+
+    .modal-card {
+        width: min(94vw, 760px);
+    }
+
+    .about-body {
+        display: grid;
+        grid-template-columns: minmax(180px, 0.8fr) minmax(240px, 1.2fr);
+        gap: 18px;
+        align-items: center;
+        text-align: left;
+    }
+
+    .about-brand,
+    .about-details {
+        align-items: flex-start;
+        text-align: left;
+        margin-top: 0;
+    }
+
+    .donate-body {
+        display: grid;
+        grid-template-columns: minmax(200px, 0.8fr) minmax(260px, 1.2fr);
+        gap: 18px;
+        align-items: center;
+        text-align: left;
+    }
+
+    .donate-copy {
+        align-items: flex-start;
+        text-align: left;
+    }
+
+    .donate-actions {
+        align-items: stretch;
+    }
+
+    .copy-button {
+        width: fit-content;
+        min-width: 220px;
     }
 
     .app-shell {
