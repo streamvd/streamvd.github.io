@@ -35,7 +35,7 @@ body {
         radial-gradient(circle at bottom right, rgba(89, 224, 169, 0.18), transparent 25%),
         linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 38%, var(--bg-3) 100%);
     -webkit-tap-highlight-color: transparent;
-    overscroll-behavior-y: contain;
+    overscroll-behavior-y: none;
     touch-action: pan-y;
 }
 
