@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const PLAYLIST_URL = runtimeProxyUrl;
     const METADATA_POLL_MS = 5000;
     const PIX_CODE = '00020126580014br.gov.bcb.pix013616f06530-c133-47f2-b4d4-452e580401fb5204000053039865802BR5922WALTEMAR LIMA CARNEIRO6006MANAUS62580520SAN2023012101152512450300017br.gov.bcb.brcode01051.0.063049962';
+    const RELOAD_SWIPE_THRESHOLD = 80;
 
     const defaultState = {
         title: 'Carregando...',
@@ -36,6 +37,9 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastAppliedMetaKey = '';
     let coverRequestToken = 0;
     let activeTrackVersion = 0;
+    let reloadTouchStartY = 0;
+    let reloadTouchStartX = 0;
+    let isReloadingBySwipe = false;
     const coverCache = new Map();
 
     function setPlayButtonState(isPlaying) {
@@ -459,6 +463,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function handleReloadTouchStart(event) {
+        if (isReloadingBySwipe || document.querySelector('.modal-panel.visible')) {
+            return;
+        }
+
+        const touch = event.touches && event.touches[0];
+        if (!touch) return;
+
+        reloadTouchStartY = touch.clientY;
+        reloadTouchStartX = touch.clientX;
+    }
+
+    function handleReloadTouchEnd(event) {
+        if (isReloadingBySwipe || reloadTouchStartY === 0) {
+            return;
+        }
+
+        const touch = event.changedTouches && event.changedTouches[0];
+        if (!touch) return;
+
+        const verticalDistance = touch.clientY - reloadTouchStartY;
+        const horizontalDistance = Math.abs(touch.clientX - reloadTouchStartX);
+        reloadTouchStartY = 0;
+        reloadTouchStartX = 0;
+
+        if (verticalDistance < RELOAD_SWIPE_THRESHOLD || horizontalDistance > Math.abs(verticalDistance)) {
+            return;
+        }
+
+        isReloadingBySwipe = true;
+        window.location.reload();
+    }
+
     function registerServiceWorker() {
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
@@ -468,6 +505,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }
+
+    document.addEventListener('touchstart', handleReloadTouchStart, { passive: true });
+    document.addEventListener('touchend', handleReloadTouchEnd, { passive: true });
+    document.addEventListener('touchcancel', () => {
+        reloadTouchStartY = 0;
+        reloadTouchStartX = 0;
+    }, { passive: true });
 
     playPauseBtn.addEventListener('click', togglePlayback);
     aboutButton.addEventListener('click', () => openModal(drawerAbout));
