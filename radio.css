@@ -8,7 +8,7 @@
 }
 /* dm-sans-500 - latin */
 @font-face {
-  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-display: swap; /* Check https://fdeveloper.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
   font-family: 'DM Sans';
   font-style: normal;
   font-weight: 500;
@@ -167,8 +167,8 @@ img {
 .action-button svg,
 .copy-button svg,
 .play-button svg {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     fill: currentColor;
 }
 
