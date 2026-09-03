@@ -744,7 +744,7 @@ img {
     }
 
     .art-frame {
-        width: min(62vw, 300px);
+        width: min(80vw, 300px);
         border-radius: 22px;
     }
 
