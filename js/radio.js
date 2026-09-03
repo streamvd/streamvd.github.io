@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const METADATA_POLL_MS = 5000;
     const PIX_CODE = '00020126580014BR.GOV.BCB.PIX0136aa8b3fd0-0c76-422f-9f3a-844bd7f6b6275204000053039865802BR5922WALTEMAR LIMA CARNEIRO6006MANAUS62170513TX5YYN5DB1PTT63042916';
     const RELOAD_SWIPE_THRESHOLD = 80;
+    const INSTALL_STATUS_KEY = 'love-songs-pwa-installed';
 
     const defaultState = {
         title: 'Carregando...',
@@ -466,13 +467,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function hideInstallButton() {
+        if (!installButton) return;
         installButton.hidden = true;
     }
 
     function handleInstallPrompt(event) {
+        if (localStorage.getItem(INSTALL_STATUS_KEY) === 'true') {
+            return;
+        }
+
         event.preventDefault();
         deferredInstallPrompt = event;
-        installButton.hidden = false;
+        if (installButton) {
+            installButton.hidden = false;
+        }
     }
 
     async function installApp() {
@@ -481,10 +489,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const promptEvent = deferredInstallPrompt;
         deferredInstallPrompt = null;
         hideInstallButton();
-        await promptEvent.prompt();
-
         try {
-            await promptEvent.userChoice;
+            await promptEvent.prompt();
+            const choice = await promptEvent.userChoice;
+            if (choice.outcome === 'accepted') {
+                localStorage.setItem(INSTALL_STATUS_KEY, 'true');
+                hideInstallButton();
+            } else if (installButton) {
+                installButton.hidden = false;
+            }
         } catch (error) {
             console.warn('Não foi possível concluir a instalação:', error);
         }
@@ -536,7 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('beforeinstallprompt', handleInstallPrompt);
     window.addEventListener('appinstalled', hideInstallButton);
 
-    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+    if (localStorage.getItem(INSTALL_STATUS_KEY) === 'true' || window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
         hideInstallButton();
     }
 
@@ -549,7 +562,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     playPauseBtn.addEventListener('click', togglePlayback);
     aboutButton.addEventListener('click', () => openModal(drawerAbout));
-    installButton.addEventListener('click', installApp);
+    if (installButton) {
+        installButton.addEventListener('click', installApp);
+    }
     donateBtn.addEventListener('click', () => {
         copyPIX();
         openModal(donateModal);
