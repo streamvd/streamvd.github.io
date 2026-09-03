@@ -8,7 +8,7 @@
 }
 /* dm-sans-500 - latin */
 @font-face {
-  font-display: swap; /* Check https://fdeveloper.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
   font-family: 'DM Sans';
   font-style: normal;
   font-weight: 500;
@@ -97,6 +97,10 @@ img {
 
 button {
     font: inherit;
+}
+
+[hidden] {
+    display: none !important;
 }
 
 img {
