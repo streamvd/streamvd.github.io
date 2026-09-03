@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const METADATA_POLL_MS = 5000;
     const PIX_CODE = '00020126580014BR.GOV.BCB.PIX0136aa8b3fd0-0c76-422f-9f3a-844bd7f6b6275204000053039865802BR5922WALTEMAR LIMA CARNEIRO6006MANAUS62170513TX5YYN5DB1PTT63042916';
     const RELOAD_SWIPE_THRESHOLD = 80;
-    const INSTALL_STATUS_KEY = 'love-songs-pwa-installed';
+    const standaloneMediaQuery = window.matchMedia('(display-mode: standalone)');
 
     const defaultState = {
         title: 'Carregando...',
@@ -472,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function handleInstallPrompt(event) {
-        if (localStorage.getItem(INSTALL_STATUS_KEY) === 'true') {
+        if (isAppInstalled()) {
             return;
         }
 
@@ -493,14 +493,20 @@ document.addEventListener('DOMContentLoaded', () => {
             await promptEvent.prompt();
             const choice = await promptEvent.userChoice;
             if (choice.outcome === 'accepted') {
-                localStorage.setItem(INSTALL_STATUS_KEY, 'true');
                 hideInstallButton();
             } else if (installButton) {
                 installButton.hidden = false;
             }
         } catch (error) {
             console.warn('Não foi possível concluir a instalação:', error);
+            if (!isAppInstalled() && installButton) {
+                installButton.hidden = false;
+            }
         }
+    }
+
+    function isAppInstalled() {
+        return standaloneMediaQuery.matches || window.navigator.standalone === true;
     }
 
     function handleReloadTouchStart(event) {
@@ -548,8 +554,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('beforeinstallprompt', handleInstallPrompt);
     window.addEventListener('appinstalled', hideInstallButton);
+    function handleDisplayModeChange(event) {
+        if (event.matches) {
+            hideInstallButton();
+        }
+    }
 
-    if (localStorage.getItem(INSTALL_STATUS_KEY) === 'true' || window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+    if (standaloneMediaQuery.addEventListener) {
+        standaloneMediaQuery.addEventListener('change', handleDisplayModeChange);
+    } else {
+        standaloneMediaQuery.addListener(handleDisplayModeChange);
+    }
+
+    if (isAppInstalled()) {
         hideInstallButton();
     }
 

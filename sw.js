@@ -1,4 +1,4 @@
-const CACHE_NAME = 'love-songs-v4';
+const CACHE_NAME = 'love-songs-v5.0.0';
 const APP_SHELL = [
   '/',
   '/index.html',
