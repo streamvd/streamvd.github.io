@@ -207,7 +207,6 @@ img {
 
 .brand-wrap h1 {
     font-size: clamp(1.5rem, 4vw, 2rem);
-    letter-spacing: 0.14em;
     font-weight: 700;
     color: var(--white);
     opacity: 0.5;
@@ -784,10 +783,6 @@ img {
 
     .topbar {
         margin-bottom: 6px;
-    }
-
-    .brand-wrap h1 {
-        letter-spacing: 0.05em;
     }
 
     .player-panel {
