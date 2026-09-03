@@ -1,3 +1,44 @@
+/* dm-sans-regular - latin */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: url('./fonts/dm-sans-v17-latin-regular.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* dm-sans-500 - latin */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 500;
+  src: url('./fonts/dm-sans-v17-latin-500.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* dm-sans-600 - latin */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 600;
+  src: url('./fonts/dm-sans-v17-latin-600.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* dm-sans-700 - latin */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 700;
+  src: url('./fonts/dm-sans-v17-latin-700.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+/* dm-sans-800 - latin */
+@font-face {
+  font-display: swap; /* Check https://developer.mozilla.org/en-US/docs/Web/CSS/@font-face/font-display for other options. */
+  font-family: 'DM Sans';
+  font-style: normal;
+  font-weight: 800;
+  src: url('./fonts/dm-sans-v17-latin-800.woff2') format('woff2'); /* Chrome 36+, Opera 23+, Firefox 39+, Safari 12+, iOS 10+ */
+}
+
 :root {
     --bg-1: #070d1a;
     --bg-2: #0f1b2d;
@@ -28,7 +69,7 @@ html,
 body {
     min-height: 100%;
     height: 100%;
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "DM Sans", sans-serif;
     color: var(--text);
     background:
         radial-gradient(circle at top left, rgba(91, 183, 255, 0.22), transparent 20%),
@@ -326,8 +367,9 @@ img {
 }
 
 .action-button span {
-    font-size: 0.83rem;
+    font-size: 1rem;
     letter-spacing: 0.02em;
+    font-weight: 500;
 }
 
 .modal-panel {
@@ -436,6 +478,8 @@ img {
 .about-body p,
 .donate-body p {
     color: var(--muted);
+    font-size: 1.125rem;
+    font-weight: 500;
 }
 
 .info-box {
@@ -449,6 +493,8 @@ img {
 
 .info-box p {
     margin: 8px 0;
+    font-weight: 500;
+    font-size: 1.125rem;
 }
 
 .social-links {
@@ -498,6 +544,8 @@ img {
     text-align: left;
     color: var(--text);
     margin: 10px 0;
+    font-weight: 500;
+    font-size: 1.125rem;
 }
 
 .steps-box p::before {
@@ -688,6 +736,7 @@ img {
     #artist-name {
         margin-left: 0;
         margin-right: 0;
+        font-weight: 500;
     }
 
     .player-controls {
@@ -735,7 +784,6 @@ img {
 
     .brand-wrap h1 {
         letter-spacing: 0.05em;
-        margin-top: 8px;
     }
 
     .player-panel {
@@ -744,6 +792,7 @@ img {
     }
 
     .art-frame {
+        /*width: min(62vw, 300px);*/
         width: min(80vw, 300px);
         border-radius: 22px;
     }
@@ -755,8 +804,9 @@ img {
     }
 
     #artist-name {
-        font-size: 1rem;
+        font-size: 1.3rem;
         line-height: 1.5;
+        font-weight: 500;
     }
 
     .player-controls {
