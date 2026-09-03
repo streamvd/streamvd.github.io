@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const drawerAbout = document.getElementById('aboutSection');
     const donateModal = document.getElementById('donateModal');
     const aboutButton = document.getElementById('aboutButton');
+    const installButton = document.getElementById('installButton');
     const donateBtn = document.getElementById('donateBtn');
     const shareBtn = document.getElementById('shareBtn');
     const copyPixBtn = document.getElementById('copyPixBtn');
@@ -40,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let reloadTouchStartY = 0;
     let reloadTouchStartX = 0;
     let isReloadingBySwipe = false;
+    let deferredInstallPrompt = null;
     const coverCache = new Map();
 
     function setPlayButtonState(isPlaying) {
@@ -463,6 +465,31 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    function hideInstallButton() {
+        installButton.hidden = true;
+    }
+
+    function handleInstallPrompt(event) {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        installButton.hidden = false;
+    }
+
+    async function installApp() {
+        if (!deferredInstallPrompt) return;
+
+        const promptEvent = deferredInstallPrompt;
+        deferredInstallPrompt = null;
+        hideInstallButton();
+        await promptEvent.prompt();
+
+        try {
+            await promptEvent.userChoice;
+        } catch (error) {
+            console.warn('Não foi possível concluir a instalação:', error);
+        }
+    }
+
     function handleReloadTouchStart(event) {
         if (isReloadingBySwipe || document.querySelector('.modal-panel.visible')) {
             return;
@@ -506,6 +533,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    window.addEventListener('beforeinstallprompt', handleInstallPrompt);
+    window.addEventListener('appinstalled', hideInstallButton);
+
+    if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+        hideInstallButton();
+    }
+
     document.addEventListener('touchstart', handleReloadTouchStart, { passive: true });
     document.addEventListener('touchend', handleReloadTouchEnd, { passive: true });
     document.addEventListener('touchcancel', () => {
@@ -515,6 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     playPauseBtn.addEventListener('click', togglePlayback);
     aboutButton.addEventListener('click', () => openModal(drawerAbout));
+    installButton.addEventListener('click', installApp);
     donateBtn.addEventListener('click', () => {
         copyPIX();
         openModal(donateModal);
