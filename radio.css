@@ -49,11 +49,11 @@
     --card-soft: rgba(148, 163, 184, 0.10);
     --text: #edf4ff;
     --muted: #b5c3d9;
-    --primary: #59e0a9;
-    --primary-2: #5bb7ff;
+    --primary: #00D473;
+    --primary-2: #007664;
     --accent: #e96ae6;
-    --danger: #ff5f67;
-    --danger-2: #ff9d67;
+    --play: #ff5f67;
+    --play-2: #c90f2e;
     --white: #ffffff;
     --line: rgba(255, 255, 255, 0.09);
     --shadow: rgba(1, 4, 14, 0.55);
@@ -330,7 +330,7 @@ img {
     height: 72px;
     border: none;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--danger), var(--danger));
+    background: linear-gradient(135deg, var(--play), var(--play-2));
     color: var(--white);
     display: inline-flex;
     align-items: center;
