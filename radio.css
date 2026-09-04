@@ -557,8 +557,8 @@ img {
     width: 24px;
     height: 24px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.92);
-    color: #0d1528;
+    background: rgb(14 19 32);
+    color: rgba(255, 255, 255, 0.92);
     display: inline-flex;
     align-items: center;
     justify-content: center;
