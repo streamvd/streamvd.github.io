@@ -1,4 +1,4 @@
-const CACHE_NAME = 'love-songs-v5.0.0';
+const CACHE_NAME = 'love-songs-v5.0.1';
 const APP_SHELL = [
   '/',
   '/index.html',
@@ -6,6 +6,7 @@ const APP_SHELL = [
   '/js/radio.js',
   '/manifest.json',
   '/img/album.webp',
+  '/img/logo.webp',
   '/img/alert-circle-outline.svg',
   '/img/chevron-back.svg',
   '/img/checkmark-circle.svg',

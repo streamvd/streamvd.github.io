@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const trackTitleEl = document.getElementById('track-title');
     const artistNameEl = document.getElementById('artist-name');
     const albumArtEl = document.getElementById('album-art');
-    const aboutLogoEl = document.getElementById('aboutLogo');
     const drawerAbout = document.getElementById('aboutSection');
     const donateModal = document.getElementById('donateModal');
     const aboutButton = document.getElementById('aboutButton');
@@ -60,7 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const safeUrl = url || defaultState.cover;
         albumArtEl.src = safeUrl;
         albumArtEl.alt = 'Capa da música atual';
-        if (aboutLogoEl) aboutLogoEl.src = safeUrl;
     }
 
     function applyStationMeta(data) {
